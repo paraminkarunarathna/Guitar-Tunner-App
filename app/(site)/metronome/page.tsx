@@ -280,6 +280,10 @@ export default function MetronomePage() {
           <Link href="/ukulele-tuner">ukulele tuner</Link>, and our{" "}
           <Link href="/articles">guitar tuning articles</Link>.
         </p>
+        <p>
+          Not sure what tempo a song is? <Link href="/tap-tempo">Tap it out</Link> to find the BPM, then bring it
+          here to practise. Plan a whole set with the <Link href="/setlist-builder">setlist builder</Link>.
+        </p>
       </ToolPageLayout>
     </>
   );

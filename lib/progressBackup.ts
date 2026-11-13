@@ -141,6 +141,11 @@ const MERGERS: Record<string, Merger> = {
     const b = parse<{ bestStreak?: number; byAnswer?: Tally }>(i) ?? {};
     return json({ bestStreak: Math.max(a.bestStreak ?? 0, b.bestStreak ?? 0), byAnswer: mergeTally(a.byAnswer, b.byAnswer) });
   },
+  'gtp-chord-quiz': (l, i) => {
+    const a = parse<{ bestStreak?: number; byAnswer?: Tally }>(l) ?? {};
+    const b = parse<{ bestStreak?: number; byAnswer?: Tally }>(i) ?? {};
+    return json({ bestStreak: Math.max(a.bestStreak ?? 0, b.bestStreak ?? 0), byAnswer: mergeTally(a.byAnswer, b.byAnswer) });
+  },
   'gtp-fretboard-trainer': (l, i) => {
     const a = parse<{ bestStreak?: number; byString?: Tally }>(l) ?? {};
     const b = parse<{ bestStreak?: number; byString?: Tally }>(i) ?? {};

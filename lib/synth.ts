@@ -202,3 +202,80 @@ export function startDrone(notes: number[], volume = 0.5, a4 = 440): () => void 
     oscillators.forEach((osc) => osc.stop(t + 0.45));
   };
 }
+
+/** A sustained, reedy pitch-pipe note — a few harmonics through a gentle
+ *  low-pass with a short attack, so the pitch is easy to hear and match.
+ *  Plays until the returned stop function is called. */
+export function startPipeNote(frequency: number, volume = 0.5): () => void {
+  const ctx = getAudioContext();
+  const now = ctx.currentTime;
+  const master = ctx.createGain();
+  master.gain.setValueAtTime(0.0001, now);
+  master.gain.exponentialRampToValueAtTime(0.22 * volume + 0.01, now + 0.06);
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = Math.min(frequency * 6, 5000);
+  filter.Q.value = 0.5;
+  filter.connect(master);
+  master.connect(ctx.destination);
+
+  const oscillators = [
+    { ratio: 1, gain: 1, type: 'sawtooth' as OscillatorType },
+    { ratio: 2, gain: 0.25, type: 'sine' as OscillatorType },
+  ].map(({ ratio, gain, type }) => {
+    const osc = ctx.createOscillator();
+    const amp = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = frequency * ratio;
+    amp.gain.value = gain;
+    osc.connect(amp);
+    amp.connect(filter);
+    osc.start(now);
+    return osc;
+  });
+
+  return () => {
+    const t = ctx.currentTime;
+    master.gain.cancelScheduledValues(t);
+    master.gain.setValueAtTime(Math.max(master.gain.value, 0.0001), t);
+    master.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+    oscillators.forEach((osc) => osc.stop(t + 0.2));
+    window.setTimeout(() => master.disconnect(), 300);
+  };
+}
+
+/** Strike a tuning fork: an almost pure tone that rings for about ten
+ *  seconds, with a brief high clang at the strike that dies in a fraction
+ *  of a second, as on a real fork. Returns a function that damps it. */
+export function strikeFork(frequency: number, volume = 0.6): () => void {
+  const ctx = getAudioContext();
+  const now = ctx.currentTime;
+  const master = ctx.createGain();
+  master.gain.value = 1;
+  master.connect(ctx.destination);
+
+  const partial = (ratio: number, peak: number, decay: number) => {
+    const osc = ctx.createOscillator();
+    const amp = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = frequency * ratio;
+    amp.gain.setValueAtTime(0.0001, now);
+    amp.gain.exponentialRampToValueAtTime(peak * volume, now + 0.01);
+    amp.gain.exponentialRampToValueAtTime(0.0001, now + decay);
+    osc.connect(amp);
+    amp.connect(master);
+    osc.start(now);
+    osc.stop(now + decay + 0.1);
+  };
+  partial(1, 0.35, 11);
+  // A fork's first overtone is near 6.3x the fundamental, not 2x.
+  partial(6.27, 0.08, 0.35);
+
+  return () => {
+    const t = ctx.currentTime;
+    master.gain.cancelScheduledValues(t);
+    master.gain.setValueAtTime(1, t);
+    master.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+    window.setTimeout(() => master.disconnect(), 350);
+  };
+}

@@ -956,3 +956,30 @@ hand out (each sheet carries the site address in its footer).
 
 - The 7 new English tuner pages are not translated yet (cavaquinho is).
 - Search Console title rewrites need the query export from the user.
+
+## Step 26 — Five more tools for search and return visits  ✅ DONE (2026-11-13)
+
+Each targets a query the site did not cover, and the quiz and setlist are
+built to be used repeatedly. All are in `lib/toolPages.ts`, so the navbar,
+footer, sitemap, share images and every tool's cross-links picked them up.
+
+| Route | What it does |
+|---|---|
+| `/tap-tempo` | Tap a BPM. Averages the last 10 taps, resets after 2.5 s, names the Italian marking, half/double time, ms per beat; opens the metronome / rhythm trainer at that tempo. Timed on `pointerdown`, not click. |
+| `/pitch-pipe` | Held reference note per string for guitar, drop D, bass, ukulele, violin, or the 12 chromatic notes, at 432/440/442/443. Server-rendered frequency table from the same MIDI maths as the tuner. |
+| `/tuning-fork` | Six forks (A440/442/432, E 329.63, C 523, C 256): near-pure tone with a ~10 s decay and a short 6.27× clang, animated SVG fork. |
+| `/chord-quiz` | Name the chord from its diagram, three levels. Distractors share the root or quality; chords with identical note sets (C6/Am7) never appear in one question. Misses come back twice as often. Stats in `gtp-chord-quiz` (merged by the progress transfer). Counts as a practice day. |
+| `/setlist-builder` | Songs with key/BPM/capo/tuning/length/notes; flags every retune between songs, "Group by tuning" removes avoidable ones, total running time, print layout, share link (list in the URL fragment, sanitised on import). Saved in `gtp-setlist`. |
+
+Also: contextual links added from the metronome, ear training and tone
+generator pages; `startPipeNote` and `strikeFork` in `lib/synth.ts`.
+
+Verified: `tsc`, build, `audit:seo` (342 pages, 0 issues), `audit:links`
+(0 orphans, depth ≤ 2), Playwright on a 390 px viewport (tap reading, quiz
+answer + feedback, pipe toggle, fork ringing, setlist retune + group button,
+no overflow, no console errors).
+
+### Not done
+
+- Not translated; English only, like the other tools.
+- Search Console submission of the new URLs needs the user.

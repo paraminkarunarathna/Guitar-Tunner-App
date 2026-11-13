@@ -34,6 +34,41 @@ export const TOOL_PAGES: ToolPageEntry[] = [
       "A timed 10, 20 or 30 minute routine with a new chord pair, scale and strumming pattern every day — and a streak and calendar to keep you coming back.",
   },
   {
+    href: "/setlist-builder",
+    label: "Setlist Builder",
+    tagline: "Order songs, spot retunes",
+    blurb:
+      "Build a gig or rehearsal setlist with key, BPM, capo and tuning for every song — see where you have to retune, group songs to avoid it, then print or share it.",
+  },
+  {
+    href: "/chord-quiz",
+    label: "Chord Quiz",
+    tagline: "Name the shape",
+    blurb:
+      "A chord diagram appears — name it. Open chords first, then sevenths and barre shapes, with a streak and the chords you miss coming back more often.",
+  },
+  {
+    href: "/tap-tempo",
+    label: "Tap Tempo",
+    tagline: "Find any song's BPM",
+    blurb:
+      "Tap along to a song and read its BPM, with the Italian tempo marking, half and double time, and a one-click jump into the metronome.",
+  },
+  {
+    href: "/pitch-pipe",
+    label: "Pitch Pipe",
+    tagline: "Tune by ear, any instrument",
+    blurb:
+      "A sustained reference note for every string of guitar, bass, ukulele and violin — or any of the twelve notes — at 432, 440, 442 or 443 Hz.",
+  },
+  {
+    href: "/tuning-fork",
+    label: "Tuning Fork",
+    tagline: "A440 and more",
+    blurb:
+      "Strike a virtual tuning fork — A 440, 442, 432, high E, C 523 or C 256 — and hear it ring and fade the way a steel fork does.",
+  },
+  {
     href: "/chords",
     label: "Chord Library",
     tagline: "Diagrams & audio",

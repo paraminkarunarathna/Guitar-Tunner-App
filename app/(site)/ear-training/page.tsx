@@ -210,6 +210,11 @@ export default function EarTrainingPage() {
           <Link href="/">chromatic tuner</Link> is a click away — because a
           guitar that is ten cents out teaches your ear the wrong thing.
         </p>
+        <p>
+          Train your eyes as well as your ears with the <Link href="/chord-quiz">chord quiz</Link>, and use the{" "}
+          <Link href="/pitch-pipe">pitch pipe</Link> or <Link href="/tuning-fork">tuning fork</Link> to hear a reference
+          pitch.
+        </p>
       </ToolPageLayout>
     </>
   );

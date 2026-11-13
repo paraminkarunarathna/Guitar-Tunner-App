@@ -201,6 +201,10 @@ export default function ToneGeneratorPage() {
           loud enough to cause harm, and very low ones can damage small
           speakers at full volume.
         </p>
+        <p>
+          For tuning, the <Link href="/pitch-pipe">pitch pipe</Link> has a ready-made note for every string, and the{" "}
+          <Link href="/tuning-fork">tuning fork</Link> gives a clean A 440 that rings and fades.
+        </p>
       </ToolPageLayout>
     </>
   );
