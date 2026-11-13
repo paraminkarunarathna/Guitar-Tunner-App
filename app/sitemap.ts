@@ -11,6 +11,7 @@ import {
   HANDWRITTEN_PAGES,
   TRANSLATED_LOCALES,
   TRANSLATED_PAGES,
+  TRANSLATED_TOOLS,
   languageAlternates,
 } from '@/lib/i18n/pages';
 import { lastModifiedOf, routeDir } from '@/lib/pageDates';
@@ -26,6 +27,9 @@ const dated = (...paths: string[]) => {
 /** Source files behind a translated page: its own route when it was written
  *  by hand, otherwise the shared renderer and that language's copy. */
 function translatedSources(path: string, locale: string) {
+  if (TRANSLATED_TOOLS.some((tool) => tool[locale as 'es'] === path)) {
+    return ['components/LocalizedToolPage.tsx', 'lib/i18n/tools'];
+  }
   if (path === `/${locale}`) return [`app/${locale === 'es' ? 'es' : '[lang]'}/page.tsx`];
   if (HANDWRITTEN_PAGES.has(path)) return [`app${path}`];
   return ['components/LocalizedTunerPage.tsx', `lib/i18n/content/${locale}.ts`];
@@ -73,6 +77,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
       })),
   );
 
+  const translatedTools: MetadataRoute.Sitemap = TRANSLATED_LOCALES.flatMap((locale) =>
+    TRANSLATED_TOOLS.map((page) => ({
+      url: `${siteUrl}${page[locale]}`,
+      ...dated('components/LocalizedToolPage.tsx', `lib/i18n/tools/pages-${locale}.ts`),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+      ...withAlternates(page[locale]),
+    })),
+  );
+
   return [
     {
       url: siteUrl,
@@ -84,11 +98,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     ...toolPages,
     ...translatedPages,
+    ...translatedTools,
     ...TOOL_PAGES.map((tool) => ({
       url: `${siteUrl}${tool.href}`,
       ...dated(routeDir(tool.href)),
       changeFrequency: tool.href === '/chords' ? ('weekly' as const) : ('monthly' as const),
       priority: 0.9,
+      ...(TRANSLATED_TOOLS.some((t) => t.en === tool.href) ? withAlternates(tool.href) : {}),
     })),
     ...UKE_CHORDS.filter(isUkeChordIndexed).map((chord) => ({
       url: `${siteUrl}/ukulele-chords/${chord.slug}`,

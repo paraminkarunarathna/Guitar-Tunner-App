@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { languageAlternates } from "@/lib/i18n/pages";
 import Link from "next/link";
 import ToolPageLayout from "@/components/ToolPageLayout";
 import { TapTempo } from "@/components/TapTempo/TapTempo";
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   title: "Tap Tempo — Find the BPM of Any Song",
   description:
     "Free tap tempo BPM counter. Tap along to any song and see its tempo, Italian marking, half and double time — then practise it in the metronome.",
-  alternates: { canonical: "/tap-tempo" },
+  alternates: { canonical: "/tap-tempo", languages: languageAlternates("/tap-tempo") },
   openGraph: {
     title: "Tap Tempo BPM Counter — Find the Tempo of Any Song",
     description:

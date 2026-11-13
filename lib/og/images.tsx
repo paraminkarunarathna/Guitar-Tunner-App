@@ -11,6 +11,8 @@ import { getPrintableSheet } from "@/lib/printables";
 import { getUkeChord } from "@/lib/ukulele/chords";
 import { getScalePage, scalePageData } from "@/lib/music/scalePages";
 import { CONTENT } from "@/lib/i18n/content";
+import { TOOL_COPY } from "@/lib/i18n/tools";
+import type { TranslatedLocale } from "@/lib/i18n/pages";
 import { localNote, type Locale } from "@/lib/i18n/tuner";
 import {
   ChordVisual,
@@ -93,6 +95,17 @@ export function toolOgImage(href: string) {
     eyebrow: tool?.tagline ?? "Guitar tool",
     title: tool?.label ?? "GuitarTunePro",
     subtitle: tool?.blurb,
+  });
+}
+
+/** Card for a translated practice-tool page, from its own copy. */
+export function localizedToolOgImage(enPath: string, locale: TranslatedLocale) {
+  const copy = TOOL_COPY[locale][enPath];
+  return renderOgCard({
+    eyebrow: { es: "Herramienta gratis", pt: "Ferramenta grátis", fr: "Outil gratuit", de: "Kostenloses Tool" }[locale],
+    title: copy?.title ?? "GuitarTunePro",
+    subtitle: copy ? firstSentence(copy.description) : undefined,
+    footnote: CARD_TEXT[locale].footnote,
   });
 }
 

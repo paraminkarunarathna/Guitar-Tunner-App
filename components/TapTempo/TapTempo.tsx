@@ -4,10 +4,13 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Check, Copy, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { addTap, bpmFromTaps, msPerBeat, tempoMarking } from "@/lib/music/tempo";
+import { addTap, bpmFromTaps, msPerBeat, tempoMarking, TEMPO_MARKINGS } from "@/lib/music/tempo";
+import { TAP_UI, fmt } from "@/lib/i18n/tools/ui";
+import { localDecimal, type Locale } from "@/lib/i18n/tuner";
 import { logPractice } from "@/lib/practiceLog";
 
-export function TapTempo() {
+export function TapTempo({ locale = "en" }: { locale?: Locale }) {
+  const u = TAP_UI[locale];
   const [taps, setTaps] = useState<number[]>([]);
   const [pulse, setPulse] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -43,7 +46,7 @@ export function TapTempo() {
   }, [tap, reset]);
 
   const bpm = bpmFromTaps(taps);
-  const shown = bpm === null ? null : decimals ? bpm.toFixed(1) : String(Math.round(bpm));
+  const shown = bpm === null ? null : decimals ? localDecimal(bpm, 1, locale) : String(Math.round(bpm));
   const marking = bpm === null ? undefined : tempoMarking(bpm);
   const rounded = bpm === null ? null : Math.round(bpm);
 
@@ -69,9 +72,11 @@ export function TapTempo() {
           <p className="mt-2 min-h-6 text-ink-muted">
             {bpm === null
               ? taps.length === 1
-                ? "One more tap…"
-                : "Tap the pad to the beat"
-              : `${marking ? `${marking.name} · ${marking.feel}` : bpm < 20 ? "Slower than any marking" : "Faster than any marking"} · ${taps.length} taps`}
+                ? u.oneMore
+                : u.idle
+              : marking
+                ? fmt(u.reading, { marking: marking.name, feel: u.feel[TEMPO_MARKINGS.indexOf(marking)] ?? marking.feel, n: taps.length })
+                : `${bpm < 20 ? u.slower : u.faster} · ${taps.length}`}
           </p>
         </div>
 
@@ -86,7 +91,7 @@ export function TapTempo() {
               tap(e.timeStamp);
             }
           }}
-          aria-label="Tap to the beat"
+          aria-label={u.tapAria}
           className={cn(
             "select-none touch-manipulation rounded-3xl border-2 py-14 sm:py-20 text-2xl font-bold transition-colors",
             pulse
@@ -94,7 +99,7 @@ export function TapTempo() {
               : "border-brass/50 bg-brass/10 text-brass hover:bg-brass/20",
           )}
         >
-          TAP
+          {u.tap}
         </button>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -104,7 +109,7 @@ export function TapTempo() {
               onClick={reset}
               className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-semibold text-ink-muted hover:text-ink hover:bg-surface-raised/60"
             >
-              <RotateCcw className="h-4 w-4" /> Reset
+              <RotateCcw className="h-4 w-4" /> {u.reset}
             </button>
             <button
               type="button"
@@ -113,7 +118,7 @@ export function TapTempo() {
               className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-semibold text-ink-muted hover:text-ink hover:bg-surface-raised/60 disabled:opacity-40"
             >
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copied ? "Copied" : "Copy BPM"}
+              {copied ? u.copied : u.copy}
             </button>
           </div>
           <label className="flex items-center gap-2 text-sm text-ink-muted">
@@ -123,17 +128,17 @@ export function TapTempo() {
               onChange={(e) => setDecimals(e.target.checked)}
               className="accent-brass h-4 w-4"
             />
-            Show decimals
+            {u.decimals}
           </label>
         </div>
 
         {rounded !== null && (
           <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
             {[
-              ["Half time", `${Math.round(rounded / 2)} BPM`],
-              ["Double time", `${rounded * 2} BPM`],
-              ["Per beat", `${Math.round(msPerBeat(rounded))} ms`],
-              ["Per bar of 4", `${(msPerBeat(rounded) * 4 / 1000).toFixed(2)} s`],
+              [u.half, `${Math.round(rounded / 2)} BPM`],
+              [u.double, `${rounded * 2} BPM`],
+              [u.perBeat, `${Math.round(msPerBeat(rounded))} ms`],
+              [u.perBar, `${localDecimal(msPerBeat(rounded) * 4 / 1000, 2, locale)} s`],
             ].map(([label, value]) => (
               <div key={label} className="rounded-xl border border-line bg-surface/40 p-3">
                 <dt className="eyebrow">{label}</dt>
@@ -145,19 +150,19 @@ export function TapTempo() {
 
         {rounded !== null && rounded >= 30 && rounded <= 300 && (
           <p className="text-sm text-ink-muted">
-            Practise at {rounded} BPM:{" "}
+            {fmt(u.practice, { bpm: rounded })}{" "}
             <Link href={`/metronome?bpm=${rounded}`} className="text-brass font-semibold hover:text-brass-hover">
-              open the metronome
+              {u.metronome}
             </Link>{" "}
-            or{" "}
+            {u.or}{" "}
             <Link href={`/rhythm-trainer?bpm=${Math.min(200, Math.max(40, rounded))}`} className="text-brass font-semibold hover:text-brass-hover">
-              test your timing at this tempo
+              {u.rhythm}
             </Link>
             .
           </p>
         )}
         <p className="text-xs text-ink-muted">
-          Keyboard: Space or Enter to tap, Esc to reset. Taps more than 2.5 seconds apart start a new count.
+          {u.keys}
         </p>
       </div>
     </div>

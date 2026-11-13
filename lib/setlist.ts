@@ -47,7 +47,9 @@ export const newSong = (): SetlistSong => ({
 });
 
 export const tuningLabel = (id: string) => SETLIST_TUNINGS.find((t) => t.id === id)?.label ?? "Standard (E A D G B E)";
-export const tuningHref = (id: string) => SETLIST_TUNINGS.find((t) => t.id === id)?.href ?? "/";
+/** The tuner page for a tuning, in the page's language where one exists. */
+export const tuningHref = (id: string, localised?: Record<string, string>) =>
+  localised?.[id] ?? SETLIST_TUNINGS.find((t) => t.id === id)?.href ?? "/";
 
 /** Positions where the next song needs a different tuning from the one
  *  before it — each is a retune on stage. Returns indexes of the song that
@@ -72,10 +74,10 @@ export function totalMinutes(songs: SetlistSong[]): number {
 }
 
 /** "1 h 05 min" / "42 min" */
-export function formatDuration(minutes: number): string {
+export function formatDuration(minutes: number, hourMin = "{h} h {m} min"): string {
   const m = Math.round(minutes);
   if (m < 60) return `${m} min`;
-  return `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")} min`;
+  return hourMin.replace("{h}", String(Math.floor(m / 60))).replace("{m}", String(m % 60).padStart(2, "0"));
 }
 
 const isString = (v: unknown): v is string => typeof v === "string";

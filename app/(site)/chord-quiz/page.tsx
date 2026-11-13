@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { languageAlternates } from "@/lib/i18n/pages";
 import Link from "next/link";
 import ToolPageLayout from "@/components/ToolPageLayout";
 import { ChordQuiz } from "@/components/ChordQuiz/ChordQuiz";
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   title: "Guitar Chord Quiz — Name the Chord Shape",
   description:
     "Free guitar chord quiz. A chord diagram appears; name it. Start with open chords, then sevenths and barre shapes. Track streaks and your weak chords.",
-  alternates: { canonical: "/chord-quiz" },
+  alternates: { canonical: "/chord-quiz", languages: languageAlternates("/chord-quiz") },
   openGraph: {
     title: "Guitar Chord Quiz — Can You Name the Shape?",
     description:

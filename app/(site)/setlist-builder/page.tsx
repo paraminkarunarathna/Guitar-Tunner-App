@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { languageAlternates } from "@/lib/i18n/pages";
 import Link from "next/link";
 import ToolPageLayout from "@/components/ToolPageLayout";
 import { SetlistBuilder } from "@/components/Setlist/SetlistBuilder";
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
   title: "Setlist Builder — Plan Songs, Keys and Tunings",
   description:
     "Free setlist builder for guitarists. Order songs with key, BPM, capo and tuning, see where you must retune, then print the list or share a link.",
-  alternates: { canonical: "/setlist-builder" },
+  alternates: { canonical: "/setlist-builder", languages: languageAlternates("/setlist-builder") },
   openGraph: {
     title: "Guitar Setlist Builder — Spot Retunes Before the Gig",
     description:

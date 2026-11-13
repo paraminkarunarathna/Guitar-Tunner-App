@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import LocalizedTunerPage, {
   localizedMetadata,
 } from "@/components/LocalizedTunerPage";
-import { TRANSLATED_PAGES, type TranslatedLocale } from "@/lib/i18n/pages";
+import LocalizedToolPage, { localizedToolMetadata } from "@/components/LocalizedToolPage";
+import { TRANSLATED_PAGES, TRANSLATED_TOOLS, type TranslatedLocale } from "@/lib/i18n/pages";
 
 /** Translated tuner pages for Portuguese, French and German. */
 const LANGS = ["pt", "fr", "de"] as const;
@@ -12,7 +13,7 @@ export const dynamicParams = false;
 
 export function generateStaticParams() {
   return LANGS.flatMap((lang) =>
-    TRANSLATED_PAGES.filter((page) => page.en !== "/").map((page) => ({
+    [...TRANSLATED_PAGES.filter((page) => page.en !== "/"), ...TRANSLATED_TOOLS].map((page) => ({
       lang,
       slug: page[lang].split("/")[2],
     })),
@@ -27,14 +28,23 @@ function resolve(lang: string, slug: string) {
   return TRANSLATED_PAGES.find((page) => page[locale] === `/${lang}/${slug}`);
 }
 
+function resolveTool(lang: string, slug: string) {
+  if (!(LANGS as readonly string[]).includes(lang)) return undefined;
+  return TRANSLATED_TOOLS.find((page) => page[lang as TranslatedLocale] === `/${lang}/${slug}`);
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params;
+  const tool = resolveTool(lang, slug);
+  if (tool) return localizedToolMetadata(lang as TranslatedLocale, tool.en);
   const page = resolve(lang, slug);
   return page ? localizedMetadata(lang as TranslatedLocale, page.en) : {};
 }
 
 export default async function LocalizedTuner({ params }: Props) {
   const { lang, slug } = await params;
+  const tool = resolveTool(lang, slug);
+  if (tool) return <LocalizedToolPage locale={lang as TranslatedLocale} enPath={tool.en} />;
   const page = resolve(lang, slug);
   if (!page) notFound();
   return <LocalizedTunerPage locale={lang as TranslatedLocale} enPath={page.en} />;

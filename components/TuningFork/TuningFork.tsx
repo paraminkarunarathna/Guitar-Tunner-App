@@ -5,11 +5,16 @@ import { cn } from "@/lib/utils";
 import { FORKS } from "@/lib/music/pitchSets";
 import { strikeFork } from "@/lib/synth";
 import { logPractice } from "@/lib/practiceLog";
+import { FORK_UI, fmt } from "@/lib/i18n/tools/ui";
+import { forkLabel } from "@/lib/i18n/tools/names";
+import type { Locale } from "@/lib/i18n/tuner";
+
 
 /** How long the fork is drawn vibrating — about as long as it rings. */
 const RING_MS = 10000;
 
-export function TuningFork() {
+export function TuningFork({ locale = "en" }: { locale?: Locale }) {
+  const u = FORK_UI[locale];
   const [forkId, setForkId] = useState("a440");
   const [ringing, setRinging] = useState(false);
   const damp = useRef<(() => void) | null>(null);
@@ -43,7 +48,7 @@ export function TuningFork() {
   return (
     <div className="w-full max-w-3xl mx-auto px-4 sm:px-6">
       <div className="rounded-3xl border border-line bg-surface-sunken/30 p-5 sm:p-8 backdrop-blur-md shadow-2xl flex flex-col items-center gap-5">
-        <div role="group" aria-label="Choose a fork" className="flex flex-wrap justify-center gap-2">
+        <div role="group" aria-label={u.choose} className="flex flex-wrap justify-center gap-2">
           {FORKS.map((f) => (
             <button
               key={f.id}
@@ -57,7 +62,7 @@ export function TuningFork() {
                   : "border-line text-ink-muted hover:text-ink hover:bg-surface-raised/60",
               )}
             >
-              {f.label}
+              {forkLabel(f.label, f.hz, locale)}
             </button>
           ))}
         </div>
@@ -65,7 +70,7 @@ export function TuningFork() {
         <button
           type="button"
           onClick={strike}
-          aria-label={`Strike the ${fork.label} tuning fork`}
+          aria-label={fmt(u.strikeAria, { fork: forkLabel(fork.label, fork.hz, locale) })}
           className="group rounded-3xl p-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brass"
         >
           <svg viewBox="0 0 120 220" className="h-56 w-auto" role="img" aria-hidden="true">
@@ -93,13 +98,13 @@ export function TuningFork() {
         </button>
 
         <div className="text-center" role="status" aria-live="polite">
-          <p className="text-3xl font-bold text-ink tabular-nums">{fork.label}</p>
-          <p className="mt-1 text-sm text-ink-muted">{ringing ? "Ringing — hold it near your ear" : "Tap the fork to strike it"}</p>
+          <p className="text-3xl font-bold text-ink tabular-nums">{forkLabel(fork.label, fork.hz, locale)}</p>
+          <p className="mt-1 text-sm text-ink-muted">{ringing ? u.ringing : u.idle}</p>
         </div>
-        <p className="max-w-xl text-center text-sm text-ink-muted">{fork.use}</p>
+        <p className="max-w-xl text-center text-sm text-ink-muted">{u.uses[FORKS.indexOf(fork)] ?? fork.use}</p>
         {ringing && (
           <button type="button" onClick={silence} className="rounded-full border border-line px-5 py-2 text-sm font-semibold text-ink-muted hover:text-ink hover:bg-surface-raised/60">
-            Damp the fork
+            {u.damp}
           </button>
         )}
       </div>

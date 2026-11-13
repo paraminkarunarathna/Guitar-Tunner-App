@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { languageAlternates } from "@/lib/i18n/pages";
 import Link from "next/link";
 import ToolPageLayout from "@/components/ToolPageLayout";
 import { TuningFork } from "@/components/TuningFork/TuningFork";
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   title: "Online Tuning Fork — A440, E, C and More",
   description:
     "Free virtual tuning fork. Strike an A 440 Hz, 442, 432, E 329 or C 523 fork and hear it ring, then tune your guitar, violin or voice to it.",
-  alternates: { canonical: "/tuning-fork" },
+  alternates: { canonical: "/tuning-fork", languages: languageAlternates("/tuning-fork") },
   openGraph: {
     title: "Online Tuning Fork — Strike an A440 and Tune by Ear",
     description:

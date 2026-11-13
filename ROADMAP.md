@@ -981,5 +981,45 @@ no overflow, no console errors).
 
 ### Not done
 
-- Not translated; English only, like the other tools.
 - Search Console submission of the new URLs needs the user.
+
+## Step 27 — The five new tools in Spanish, Portuguese, French and German  ✅ DONE (2026-11-13)
+
+20 new pages (5 tools × 4 languages), at localized URLs: `/es/contador-de-bpm`,
+`/pt/diapasao-de-sopro`, `/fr/diapason-en-ligne`, `/de/akkorde-quiz`,
+`/de/setlist-erstellen` and so on (registry: `TRANSLATED_TOOLS` in
+`lib/i18n/pages.ts`).
+
+- **Real interface translation, not just prose.** `TapTempo`, `PitchPipe`,
+  `TuningFork`, `ChordQuiz` and `SetlistBuilder` take a `locale` prop; strings
+  live in `lib/i18n/tools/ui.ts` and `setlistUi.ts`. Page copy (intro, steps,
+  tips, 5 FAQs each) is written per language in `lib/i18n/tools/pages-<lang>.ts`
+  — adapted, not machine-templated (e.g. 4-string "reentrant" ukulele note,
+  German tuning labels with H).
+- **German B/H handled.** A German "B" is B♭ and B natural is "H". `localName`
+  (lib/i18n/tools/names.ts) maps this correctly — `localNote` alone would turn
+  B♭ into "H♭". Chord symbols stay in letters in every language (as on most
+  charts), with a note explaining Do/Re/Mi equivalents; pitch pipe and fork
+  names use solfège in es/pt/fr, matching the tuner. Decimals follow the
+  existing convention (comma in pt/fr/de).
+- **Kept apart from the tuner registry** so tuner pages do not list tools as
+  "more tuners". `versionsOf` / `languageAlternates` read both, so hreflang
+  (en/es/pt/fr/de + x-default), the sitemap `xhtml:link` alternates and the
+  navbar language switcher work for tools too. The English tool pages now
+  emit hreflang.
+- **Same data, no drift.** Tempo, frequency and fork tables on translated pages
+  are drawn from the same data as the English pages.
+- Localized share images (`localizedToolOgImage`); setlist tuning links point to
+  the page's own-language tuner page where one exists; the share link uses the
+  current path, so a Portuguese list opens on the Portuguese page.
+- Verified: build, `audit:seo` (362 pages; 0 duplicate titles/descriptions,
+  0 long titles), `audit:links` (0 orphans, depth ≤ 2), Playwright on
+  translated pages (taps, quiz answers in German, H/B note names, fork aria
+  label, Portuguese setlist retune + tuner link, no overflow at 390 px, no
+  console errors).
+
+### Not done
+
+- Navbar menu labels and footer columns stay English on translated pages,
+  as before; the tool links to the English metronome / rhythm trainer.
+- Italian and other languages; native-speaker review of the copy is advised.

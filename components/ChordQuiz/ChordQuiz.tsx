@@ -10,6 +10,9 @@ import { fingeringMidiNotes } from "@/lib/chords";
 import { makeQuestion, QUIZ_LEVELS, type QuizLevel, type QuizQuestion } from "@/lib/chords/quiz";
 import { strum } from "@/lib/synth";
 import { logPractice } from "@/lib/practiceLog";
+import { QUIZ_UI, fmt } from "@/lib/i18n/tools/ui";
+import { chordLetters } from "@/lib/i18n/tools/names";
+import type { Locale } from "@/lib/i18n/tuner";
 
 const STORAGE_KEY = "gtp-chord-quiz";
 
@@ -41,7 +44,9 @@ function saveStats(stats: Stats) {
   }
 }
 
-export function ChordQuiz() {
+export function ChordQuiz({ locale = "en" }: { locale?: Locale }) {
+  const u = QUIZ_UI[locale];
+  const chordName = (name: string) => chordLetters(name, locale);
   const [level, setLevel] = useState<QuizLevel>("open");
   const [question, setQuestion] = useState<QuizQuestion | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
@@ -132,10 +137,10 @@ export function ChordQuiz() {
     <div className="w-full max-w-3xl mx-auto px-4 sm:px-6">
       <div className="rounded-3xl border border-line bg-surface-sunken/30 p-5 sm:p-8 backdrop-blur-md shadow-2xl flex flex-col gap-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Segmented<QuizLevel> label="Level" value={level} onChange={changeLevel} items={QUIZ_LEVELS.map((l) => ({ value: l.id, label: l.label }))} />
+          <Segmented<QuizLevel> label={u.level} value={level} onChange={changeLevel} items={QUIZ_LEVELS.map((l, i) => ({ value: l.id, label: u.levels[i]?.label ?? l.label }))} />
           <div className="flex items-center gap-4 text-sm text-ink-muted tabular-nums">
-            <span className="inline-flex items-center gap-1" title="Current streak"><Flame className="h-4 w-4 text-brass" />{streak}</span>
-            <span className="inline-flex items-center gap-1" title="Best streak"><Trophy className="h-4 w-4 text-brass" />{stats.bestStreak}</span>
+            <span className="inline-flex items-center gap-1" title={u.streak}><Flame className="h-4 w-4 text-brass" />{streak}</span>
+            <span className="inline-flex items-center gap-1" title={u.best}><Trophy className="h-4 w-4 text-brass" />{stats.bestStreak}</span>
             <span>{score.right}/{score.asked}</span>
           </div>
         </div>
@@ -145,10 +150,10 @@ export function ChordQuiz() {
         ) : (
           <>
             <div className="flex flex-col items-center gap-2">
-              <p className="eyebrow">What chord is this?</p>
+              <p className="eyebrow">{u.question}</p>
               <ChordDiagram
                 voicing={question.chord.voicings[0]}
-                title="Chord shape — name this chord"
+                title={u.diagram}
                 className="h-56 w-auto text-ink"
               />
               <button
@@ -156,7 +161,7 @@ export function ChordQuiz() {
                 onClick={() => strum(fingeringMidiNotes(question.chord.voicings[0].frets))}
                 className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-1.5 text-sm font-semibold text-ink-muted hover:text-ink hover:bg-surface-raised/60"
               >
-                <Play className="h-4 w-4" /> Hear it (H)
+                <Play className="h-4 w-4" /> {u.hear}
               </button>
             </div>
 
@@ -179,7 +184,7 @@ export function ChordQuiz() {
                       state === "dim" && "border-line bg-surface/20 text-ink-muted opacity-60",
                     )}
                   >
-                    {chord.name}
+                    {chordName(chord.name)}
                     <kbd className="text-2xs font-medium text-ink-muted">{index + 1}</kbd>
                   </button>
                 );
@@ -190,8 +195,8 @@ export function ChordQuiz() {
               {picked ? (
                 <>
                   <p className="text-sm text-ink-muted">
-                    {picked === question.chord.slug ? "Correct. " : `Not quite — it is ${question.chord.name}. `}
-                    Notes: <span className="font-semibold text-ink">{question.chord.notes.map((n) => n.name).join(" ")}</span>
+                    {picked === question.chord.slug ? `${u.correct} ` : `${fmt(u.wrong, { chord: chordName(question.chord.name) })} `}
+                    {u.notes} <span className="font-semibold text-ink">{question.chord.notes.map((n) => chordName(n.name)).join(" ")}</span>
                   </p>
                   <button
                     type="button"
@@ -199,11 +204,11 @@ export function ChordQuiz() {
                     className="inline-flex items-center gap-2 rounded-full bg-brass px-5 py-2.5 text-sm font-bold text-brass-contrast hover:bg-brass-hover"
                     autoFocus
                   >
-                    Next chord <ArrowRight className="h-4 w-4" />
+                    {u.next} <ArrowRight className="h-4 w-4" />
                   </button>
                 </>
               ) : (
-                <p className="text-sm text-ink-muted">Pick a chord, or press 1–4. Strings run low to high, left to right; × is muted, ○ is open.</p>
+                <p className="text-sm text-ink-muted">{u.hint}</p>
               )}
             </div>
           </>
@@ -211,11 +216,11 @@ export function ChordQuiz() {
 
         {weakList.length > 0 && (
           <div className="rounded-2xl border border-line bg-surface/30 p-4">
-            <p className="eyebrow">Chords to revisit</p>
+            <p className="eyebrow">{u.revisit}</p>
             <ul className="mt-2 flex flex-wrap gap-2">
               {weakList.map(([slug, [r, a]]) => (
                 <li key={slug} className="rounded-full border border-line px-3 py-1 text-sm text-ink">
-                  {getChord(slug)?.name ?? slug} <span className="text-ink-muted tabular-nums">{Math.round((r / a) * 100)}%</span>
+                  {chordName(getChord(slug)?.name ?? slug)} <span className="text-ink-muted tabular-nums">{Math.round((r / a) * 100)}%</span>
                 </li>
               ))}
             </ul>

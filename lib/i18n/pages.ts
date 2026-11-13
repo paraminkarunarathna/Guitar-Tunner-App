@@ -200,6 +200,47 @@ export const TRANSLATED_PAGES: TranslatedPage[] = [
   },
 ];
 
+/** The new practice tools that have translated pages. Kept apart from
+ *  TRANSLATED_PAGES (tuners) so tuner pages do not list them as "more
+ *  tuners"; hreflang, the sitemap and the language selector read both. */
+export const TRANSLATED_TOOLS: TranslatedPage[] = [
+  {
+    en: "/tap-tempo",
+    es: "/es/contador-de-bpm",
+    pt: "/pt/contador-de-bpm",
+    fr: "/fr/compteur-de-bpm",
+    de: "/de/bpm-zaehler",
+  },
+  {
+    en: "/pitch-pipe",
+    es: "/es/diapason-de-boca",
+    pt: "/pt/diapasao-de-sopro",
+    fr: "/fr/diapason-a-bouche",
+    de: "/de/stimmpfeife",
+  },
+  {
+    en: "/tuning-fork",
+    es: "/es/diapason-online",
+    pt: "/pt/diapasao-online",
+    fr: "/fr/diapason-en-ligne",
+    de: "/de/stimmgabel-online",
+  },
+  {
+    en: "/chord-quiz",
+    es: "/es/quiz-de-acordes",
+    pt: "/pt/quiz-de-acordes",
+    fr: "/fr/quiz-d-accords",
+    de: "/de/akkorde-quiz",
+  },
+  {
+    en: "/setlist-builder",
+    es: "/es/creador-de-setlist",
+    pt: "/pt/criador-de-setlist",
+    fr: "/fr/createur-de-setlist",
+    de: "/de/setlist-erstellen",
+  },
+];
+
 /** Spanish pages written by hand as their own routes under app/es, before
  *  this registry existed. The generic renderer skips them. */
 export const HANDWRITTEN_PAGES = new Set([
@@ -210,7 +251,7 @@ export const HANDWRITTEN_PAGES = new Set([
 ]);
 
 function entryFor(path: string) {
-  return TRANSLATED_PAGES.find((page) =>
+  return [...TRANSLATED_PAGES, ...TRANSLATED_TOOLS].find((page) =>
     (["en", ...TRANSLATED_LOCALES] as Locale[]).some((l) => page[l] === path),
   );
 }
