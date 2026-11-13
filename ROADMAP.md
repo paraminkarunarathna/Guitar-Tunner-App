@@ -1,5 +1,6 @@
 # GuitarTunePro — Growth & SEO Roadmap
 
+
 Goal: more organic traffic and higher session depth, without tripping Google's
 low-value-content / scaled-content policies.
 
