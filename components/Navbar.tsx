@@ -11,6 +11,7 @@ import { TOOL_PAGES } from "@/lib/toolPages";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LANGUAGE_NAMES, LOCALES, type Locale } from "@/lib/i18n/tuner";
 import { localeOfPath, versionsOf } from "@/lib/i18n/pages";
+import type { MenuDef } from "@/lib/i18n/chrome";
 
 /** The bar's "Tuner" link, in the language of the page being viewed. */
 const TUNER_LABEL: Record<Locale, string> = {
@@ -24,7 +25,7 @@ const TUNER_LABEL: Record<Locale, string> = {
 const homeOf = (locale: Locale) => (locale === "en" ? "/" : `/${locale}`);
 
 /** Shape shared by TUNER_PAGES and INSTRUMENT_PAGES entries. */
-type MenuEntry = { href: string; label: string; notes?: string };
+type MenuEntry = { href: string; label: string; notes?: string; lang?: string };
 
 /** `align` keeps the right-most panel from spilling past the shell. */
 const MENUS: {
@@ -84,7 +85,15 @@ const MENUS: {
 ];
 
 
-export function Navbar() {
+/** Translated pages pass their own menus and text; English uses the defaults. */
+export function Navbar({
+  menus: menusProp,
+  text,
+}: {
+  menus?: MenuDef[];
+  text?: { language: string; toggleMenu: string; privacy: string };
+} = {}) {
+  const menus = menusProp ?? MENUS;
   const [isOpen, setIsOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const pathname = usePathname() ?? "/";
@@ -187,7 +196,7 @@ export function Navbar() {
 
             <span aria-hidden="true" className="mx-2 h-5 w-px bg-line" />
 
-            {MENUS.map((menu) => {
+            {menus.map((menu) => {
               const active = menu.entries.some((entry) =>
                 isActive(entry.href),
               );
@@ -232,6 +241,7 @@ export function Navbar() {
                             <Link
                               key={entry.href}
                               href={entry.href}
+                              lang={entry.lang}
                               aria-current={current ? "page" : undefined}
                               className={cn(
                                 "flex items-baseline justify-between gap-3 rounded-xl px-3 py-2 transition-colors",
@@ -275,7 +285,7 @@ export function Navbar() {
                 }
                 aria-expanded={languageExpanded}
                 aria-haspopup="true"
-                aria-label={`Language: ${LANGUAGE_NAMES[locale]}`}
+                aria-label={`${text?.language ?? "Language"}: ${LANGUAGE_NAMES[locale]}`}
                 className={cn(barItem(languageExpanded), "flex items-center gap-1.5")}
               >
                 <Globe className="h-4 w-4" aria-hidden="true" />
@@ -325,7 +335,7 @@ export function Navbar() {
             <button
               onClick={() => setIsOpen((open) => !open)}
               aria-expanded={isOpen}
-              aria-label="Toggle menu"
+              aria-label={text?.toggleMenu ?? "Toggle menu"}
               className="rounded-lg p-2 text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass/60"
             >
               {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -373,7 +383,7 @@ export function Navbar() {
               </Link>
             ))}
 
-            {MENUS.map((menu) => (
+            {menus.map((menu) => (
               <React.Fragment key={menu.name}>
                 <p className="px-3 pb-1 pt-5 text-2xs font-semibold uppercase tracking-[0.18em] text-ink-subtle">
                   {menu.name}
@@ -384,6 +394,7 @@ export function Navbar() {
                     <Link
                       key={entry.href}
                       href={entry.href}
+                      lang={entry.lang}
                       aria-current={current ? "page" : undefined}
                       className={cn(
                         "flex items-baseline justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors",
@@ -411,6 +422,7 @@ export function Navbar() {
 
             <Link
               href="/privacy-policy"
+              lang={locale === "en" ? undefined : "en"}
               className="mt-4 block rounded-lg px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink"
             >
               Privacy

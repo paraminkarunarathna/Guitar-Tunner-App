@@ -7,6 +7,8 @@ import { Footer } from "@/components/Footer";
 import { HideOnEmbed } from "@/components/HideOnEmbed";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { ThemeProvider } from "@/components/theme-provider";
+import { CHROME_TEXT, localizedMenus } from "@/lib/i18n/chrome";
+import type { TranslatedLocale } from "@/lib/i18n/pages";
 import "@/app/globals.css";
 
 const inter = Inter({
@@ -105,7 +107,11 @@ export function RootShell({
         </div>
         <div className="print:hidden">
           <HideOnEmbed>
-            <Navbar />
+            {lang === "en" ? (
+              <Navbar />
+            ) : (
+              <Navbar menus={localizedMenus(lang as TranslatedLocale)} text={CHROME_TEXT[lang as TranslatedLocale]} />
+            )}
           </HideOnEmbed>
         </div>
         <div className="flex-1 w-full relative z-10">
@@ -113,7 +119,7 @@ export function RootShell({
         </div>
         <div className="print:hidden">
           <HideOnEmbed>
-            <Footer />
+            <Footer locale={lang} />
           </HideOnEmbed>
         </div>
         </ThemeProvider>

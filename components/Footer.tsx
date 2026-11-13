@@ -6,6 +6,8 @@ import { ARTICLES } from "@/lib/articles";
 import { LANGUAGE_NAMES, LOCALES } from "@/lib/i18n/tuner";
 import { TOOL_PAGES } from "@/lib/toolPages";
 import { SITE_AUTHOR } from "@/lib/author";
+import { CHROME_TEXT, localizedFooterColumns, type MenuEntry } from "@/lib/i18n/chrome";
+import type { Locale } from "@/lib/i18n/tuner";
 
 /** A few high-intent tuning pages to surface directly; the rest sit behind
  *  "All tunings". Kept short on purpose — a footer link dump helps nobody. */
@@ -15,8 +17,9 @@ const FOOTER_INSTRUMENTS = ["/bass-tuner", "/ukulele-tuner"];
 const tunerLink = (href: string) =>
   [...TUNER_PAGES, ...INSTRUMENT_PAGES].find((page) => page.href === href);
 
-export function Footer() {
+export function Footer({ locale = "en" }: { locale?: Locale } = {}) {
   const currentYear = new Date().getFullYear();
+  const t = locale === "en" ? null : CHROME_TEXT[locale];
 
   const featuredArticles = [
     "how-to-tune-a-guitar-for-beginners",
@@ -27,7 +30,7 @@ export function Footer() {
     .map((slug) => ARTICLES.find((article) => article.slug === slug))
     .filter((article): article is NonNullable<typeof article> => !!article);
 
-  const columns: { heading: string; links: { label: string; href: string }[] }[] =
+  const englishColumns: { heading: string; links: MenuEntry[] }[] =
     [
       {
         heading: "Tools",
@@ -75,6 +78,9 @@ export function Footer() {
       },
     ];
 
+  const columns = locale === "en" ? englishColumns : localizedFooterColumns(locale);
+  const home = locale === "en" ? "/" : `/${locale}`;
+
   return (
     <footer className="w-full relative z-10 border-t border-line bg-canvas/80 backdrop-blur-md pt-12 pb-8 px-6">
       {/* Decorative top ambient light */}
@@ -85,15 +91,15 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1 flex flex-col gap-2">
             <Link
-              href="/"
+              href={home}
               className="flex items-center gap-1.5 font-bold text-lg text-ink tracking-tight"
             >
               GuitarTunePro
               <span className="text-brass font-extrabold">.</span>
             </Link>
             <p className="text-xs text-ink-subtle leading-relaxed max-w-60">
-              A free browser guitar tuner with microphone pitch detection, plus a
-              chord library and tuning guides.
+              {t?.footerBlurb ??
+                "A free browser guitar tuner with microphone pitch detection, plus a chord library and tuning guides."}
             </p>
           </div>
 
@@ -107,6 +113,7 @@ export function Footer() {
                   <li key={link.href + link.label}>
                     <Link
                       href={link.href}
+                      lang={link.lang}
                       className="text-sm text-ink-muted hover:text-brass transition-colors duration-200"
                     >
                       {link.label}
@@ -120,7 +127,7 @@ export function Footer() {
 
         {/* A crawlable path to every language's tuner from every page. */}
         <nav
-          aria-label="Languages"
+          aria-label={t?.languages ?? "Languages"}
           className="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm"
         >
           {LOCALES.map((locale) => (
@@ -138,16 +145,16 @@ export function Footer() {
 
         <div className="mt-6 pt-6 border-t border-line flex flex-col sm:flex-row items-center justify-between gap-3 text-2xs text-ink-subtle">
           <p>
-            © {currentYear} GuitarTunePro. Built by{" "}
+            © {currentYear} GuitarTunePro. {t?.builtBy ?? "Built by"}{" "}
             <Link
               href={SITE_AUTHOR ? SITE_AUTHOR.url : "/about"}
               className="text-brass hover:text-brass-hover transition-colors"
             >
-              {SITE_AUTHOR ? SITE_AUTHOR.name : "the GuitarTunePro team"}
+              {SITE_AUTHOR ? SITE_AUTHOR.name : (t?.team ?? "the GuitarTunePro team")}
             </Link>
             .
           </p>
-          <p>All audio is processed on your device and never uploaded.</p>
+          <p>{t?.audioNote ?? "All audio is processed on your device and never uploaded."}</p>
         </div>
       </div>
     </footer>

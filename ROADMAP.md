@@ -1020,6 +1020,21 @@ no overflow, no console errors).
 
 ### Not done
 
-- Navbar menu labels and footer columns stay English on translated pages,
-  as before; the tool links to the English metronome / rhythm trainer.
+- Links to pages that exist only in English (About, Contact, most other
+  tools, the metronome) keep an English label and carry `lang="en"`.
 - Italian and other languages; native-speaker review of the copy is advised.
+
+### Step 27b — Navbar and footer in each language  ✅ DONE (2026-11-13)
+
+- `lib/i18n/chrome.ts` builds the menus and footer columns on the server;
+  `RootShell` passes them to `Navbar` (new optional `menus` / `text` props,
+  English unchanged) and `Footer` (new `locale` prop).
+- Menu names and footer text are translated. Tuner and instrument entries link
+  to the page's own-language version (labels from the existing content files,
+  notes in local note names — solfège, German H). The five translated tools
+  lead the Tools menu and footer.
+- Destinations that exist only in English keep an English label and
+  `lang="en"`, so a link never promises a language the page does not deliver.
+- Checked: build, `audit:seo` / `audit:links` unchanged (362 pages, 0 issues),
+  Playwright on /fr and /de at 1280 and 390 px.
+- Left English: the theme-toggle's aria-label.
