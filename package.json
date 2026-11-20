@@ -11,7 +11,8 @@
     "audit:contrast": "node scripts/audit-contrast.mjs",
     "audit:seo": "node scripts/audit-seo.mjs",
     "audit:links": "node scripts/audit-links.mjs",
-    "dates": "node scripts/page-dates.mjs"
+    "dates": "node scripts/page-dates.mjs",
+    "indexnow": "node scripts/indexnow.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

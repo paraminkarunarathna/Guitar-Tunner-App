@@ -2,12 +2,15 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Check, Copy, Download, Upload, Link2, Trash2, Flame, ArrowRight } from "lucide-react";
+import { Check, Copy, Download, Upload, Link2, Trash2, Flame, ArrowRight, Award, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { loadLog, currentStreak, bestStreak, dateKey } from "@/lib/practiceLog";
 import { challengeNumber, challengeStats, loadResults } from "@/lib/dailyChallenge";
 import { COURSE_DAYS } from "@/lib/course";
 import { RHYTHMS } from "@/lib/rhythms";
+import { evaluateAchievements, loadSeen, nextAchievement, saveSeen, type AchievementState } from "@/lib/achievements";
+import { loadSpeed } from "@/lib/music/speedTrainer";
+import { loadGuitars } from "@/lib/stringLife";
 import {
   clearProgress,
   collectBackup,
@@ -45,14 +48,39 @@ function snapshot() {
   const rhythm = read<{ best?: Record<string, { score: number; bpm: number }> }>("gtp-rhythm-trainer");
   const ear = read<{ bestStreak?: number; byAnswer?: Tally }>("gtp-ear-training");
   const fret = read<{ bestStreak?: number; byString?: Tally }>("gtp-fretboard-trainer");
+  const quiz = read<{ bestStreak?: number }>("gtp-chord-quiz");
+  const speed = loadSpeed();
+  const guitars = loadGuitars();
+  const daily = challengeStats(loadResults(), challengeNumber(today));
+  const courseDone = COURSE_DAYS.filter((d) => course[d.day]).length;
+  const minutes = Math.round(days.reduce((sum, d) => sum + (log[d].minutes || 0), 0));
+  const achievements = evaluateAchievements({
+    practiceDays: days.length,
+    bestStreak: bestStreak(log),
+    timedMinutes: minutes,
+    routines: days.reduce((sum, d) => sum + (log[d].routines || 0), 0),
+    toolsUsed: new Set(days.flatMap((d) => log[d].activities ?? [])).size,
+    dailyPlayed: daily.played,
+    dailyPerfect: daily.perfect,
+    dailyBestStreak: daily.bestStreak,
+    courseDays: courseDone,
+    earBest: ear?.bestStreak ?? 0,
+    fretBest: fret?.bestStreak ?? 0,
+    quizBest: quiz?.bestStreak ?? 0,
+    rhythmBest: Math.max(0, ...Object.values(rhythm?.best ?? {}).map((b) => b.score || 0)),
+    speedTop: Math.max(0, ...Object.values(speed.exercises).map((e) => e.best || 0)),
+    guitarsTracked: guitars.length,
+    stringChanges: guitars.reduce((sum, g) => sum + g.history.length, 0),
+  });
   return {
+    achievements,
     streak: currentStreak(log, today),
     best: bestStreak(log),
     days: days.length,
-    minutes: Math.round(days.reduce((sum, d) => sum + (log[d].minutes || 0), 0)),
+    minutes,
     practisedToday: !!log[dateKey(today)],
-    daily: challengeStats(loadResults(), challengeNumber(today)),
-    courseDone: COURSE_DAYS.filter((d) => course[d.day]).length,
+    daily,
+    courseDone,
     courseNext: COURSE_DAYS.find((d) => !course[d.day]),
     rhythm: Object.entries(rhythm?.best ?? {})
       .map(([id, b]) => ({ name: RHYTHMS.find((r) => r.id === id)?.name ?? id, ...b }))
@@ -81,6 +109,81 @@ function Tile({ label, value, sub, href }: { label: string; value: React.ReactNo
   );
 }
 
+function AchievementsPanel({ states, fresh }: { states: AchievementState[]; fresh: Set<string> }) {
+  const earned = states.filter((s) => s.earned).length;
+  const next = nextAchievement(states);
+  const [showAll, setShowAll] = useState(false);
+  // Earned first (newest-highlighted at the top), then the closest locked ones.
+  const ordered = [...states].sort(
+    (a, b) =>
+      Number(fresh.has(b.achievement.id)) - Number(fresh.has(a.achievement.id)) ||
+      Number(b.earned) - Number(a.earned) ||
+      b.progress - a.progress,
+  );
+  const shown = showAll ? ordered : ordered.slice(0, 8);
+  return (
+    <section aria-labelledby="ach-heading">
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="ach-heading" className="text-xl font-bold text-ink inline-flex items-center gap-2">
+          <Award className="h-5 w-5 text-brass" /> Achievements
+        </h2>
+        <p className="text-sm text-ink-muted tabular-nums">
+          {earned} of {states.length} unlocked
+        </p>
+      </div>
+      {next && (
+        <Link
+          href={next.achievement.href}
+          className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-brass/40 bg-brass/10 px-4 py-3 hover:bg-brass/15 transition-colors"
+        >
+          <span className="min-w-0 text-sm text-ink">
+            <span className="font-bold">Next up: {next.achievement.title}</span>
+            <span className="text-ink-muted"> — {next.achievement.description.toLowerCase()} ({Math.min(next.current, next.achievement.goal)}/{next.achievement.goal})</span>
+          </span>
+          <ArrowRight className="h-4 w-4 shrink-0 text-brass" />
+        </Link>
+      )}
+      <ul className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {shown.map(({ achievement, earned: got, progress, current }) => (
+          <li key={achievement.id}>
+            <Link
+              href={achievement.href}
+              className={cn(
+                "relative flex h-full flex-col rounded-2xl border p-3.5 transition-colors",
+                got ? "border-brass/50 bg-brass/10 hover:bg-brass/15" : "border-line bg-surface/40 hover:border-brass/30",
+              )}
+            >
+              {fresh.has(achievement.id) && (
+                <span className="absolute right-2 top-2 rounded-full bg-brass px-2 py-0.5 text-2xs font-bold text-brass-contrast">New</span>
+              )}
+              <span className={cn("inline-flex h-8 w-8 items-center justify-center rounded-full", got ? "bg-brass text-brass-contrast" : "bg-surface-raised text-ink-subtle")}>
+                {got ? <Award className="h-4 w-4" /> : <Lock className="h-3.5 w-3.5" />}
+              </span>
+              <span className={cn("mt-2 text-sm font-bold", got ? "text-ink" : "text-ink-muted")}>{achievement.title}</span>
+              <span className="mt-0.5 text-2xs text-ink-muted leading-snug">{achievement.description}</span>
+              {!got && (
+                <span className="mt-auto pt-2">
+                  <span className="block h-1.5 rounded-full bg-surface-raised overflow-hidden">
+                    <span className="block h-full bg-brass/70" style={{ width: `${Math.round(progress * 100)}%` }} />
+                  </span>
+                  <span className="mt-1 block text-2xs tabular-nums text-ink-subtle">
+                    {Math.min(current, achievement.goal)}/{achievement.goal}
+                  </span>
+                </span>
+              )}
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {ordered.length > 8 && (
+        <button type="button" onClick={() => setShowAll((v) => !v)} className="mt-3 text-sm font-semibold text-brass hover:text-brass-hover">
+          {showAll ? "Show fewer" : `Show all ${ordered.length}`}
+        </button>
+      )}
+    </section>
+  );
+}
+
 export function ProgressCenter() {
   const [snap, setSnap] = useState<Snapshot | null>(null);
   const [link, setLink] = useState<string | null>(null);
@@ -90,7 +193,20 @@ export function ProgressCenter() {
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const fileInput = useRef<HTMLInputElement | null>(null);
 
-  const refresh = useCallback(() => setSnap(snapshot()), []);
+  const [fresh, setFresh] = useState<Set<string>>(new Set());
+
+  const refresh = useCallback(() => {
+    const next = snapshot();
+    setSnap(next);
+    // Highlight badges earned since the last visit, once.
+    const seen = loadSeen();
+    const earnedIds = next.achievements.filter((a) => a.earned).map((a) => a.achievement.id);
+    const newlyEarned = earnedIds.filter((id) => !seen.has(id));
+    if (newlyEarned.length) {
+      setFresh((current) => new Set([...current, ...newlyEarned]));
+      saveSeen([...seen, ...earnedIds]);
+    }
+  }, []);
 
   useEffect(() => {
     refresh();
@@ -280,6 +396,8 @@ export function ProgressCenter() {
           </div>
         )}
       </section>
+
+      {snap && <AchievementsPanel states={snap.achievements} fresh={fresh} />}
 
       {/* Send */}
       <section aria-labelledby="send-heading" className="rounded-3xl border border-line bg-surface-sunken/30 p-5 sm:p-6">

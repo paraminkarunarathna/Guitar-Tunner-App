@@ -167,6 +167,13 @@ export const TOOL_PAGES: ToolPageEntry[] = [
       "Set a tempo from 30 to 300 BPM, tap the beat you want, and practise against sample-accurate timing — with time signatures, subdivisions, and an accented downbeat.",
   },
   {
+    href: "/speed-trainer",
+    label: "Speed Trainer",
+    tagline: "A metronome that speeds up",
+    blurb:
+      "Start at a tempo you can play cleanly and let the click climb a few BPM every few bars — with gap-click drills and your best tempo saved for every exercise.",
+  },
+  {
     href: "/tone-generator",
     label: "Tone Generator",
     tagline: "Any frequency, any note",
@@ -214,6 +221,13 @@ export const TOOL_PAGES: ToolPageEntry[] = [
     tagline: "Gauge & tuning",
     blurb:
       "See how much tension each string carries in any tuning and scale length, and which gauges would restore normal feel when you tune down.",
+  },
+  {
+    href: "/string-change-tracker",
+    label: "String Change Tracker",
+    tagline: "When to change strings",
+    blurb:
+      "Find out how long your strings should last from how much you play, track every guitar you own, and add a calendar reminder for the next change.",
   },
   {
     href: "/fret-calculator",

@@ -79,6 +79,13 @@ export const siteMetadata: Metadata = {
   other: {
     "google-adsense-account": "ca-pub-3345965156522280",
   },
+  // Bing Webmaster Tools meta-tag verification. Set BING_SITE_VERIFICATION
+  // (the content value of Bing's msvalidate.01 tag) in the hosting
+  // environment; nothing is emitted while it is unset. Not needed if the
+  // site was verified by importing from Google Search Console.
+  ...(process.env.BING_SITE_VERIFICATION
+    ? { verification: { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } } }
+    : {}),
 };
 
 export const siteViewport: Viewport = {

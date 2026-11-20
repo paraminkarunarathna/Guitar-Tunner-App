@@ -1039,3 +1039,46 @@ no overflow, no console errors).
 - Checked: build, `audit:seo` / `audit:links` unchanged (362 pages, 0 issues),
   Playwright on /fr and /de at 1280 and 390 px.
 - Left English: the theme-toggle's aria-label.
+
+## Step 28 — Speed trainer, string change tracker, achievements, Bing/IndexNow  ✅ DONE (2026-11-21)
+
+Engagement: two tools built to be reopened (a best tempo to beat, a string
+change coming due) and achievements that reward the streaks already tracked.
+
+| Route | What it does |
+|---|---|
+| `/speed-trainer` | Metronome that raises the tempo every N bars from a start to a target BPM (ramps down too). Hold, "Too fast" (step back one notch), loop-the-ramp, gap-click silent bars, 2–7 beats. Best tempo saved per named exercise (`gtp-speed-trainer`); shareable `?start=&target=&step=&every=…` links. Counts as a practice day. |
+| `/string-change-tracker` | Estimated string life from type, coating, sweat and hours/week; tracks up to 12 guitars with wear bar, due date, practice days since the change and how long each previous set lasted. Downloads an `.ics` reminder for any calendar app. Server-rendered life table from the same model (`lib/stringLife.ts`). Saved in `gtp-strings`. |
+| `/my-progress` achievements | 24 milestones (`lib/achievements.ts`) computed from data the tools already store, so existing players get them retroactively. "Next up" nudge, "New" highlight once (`gtp-achievements`). |
+
+- String life model is calibrated to published ranges (6–8 weeks at a few
+  hours a week, 2–3 months regular, 3–6 months casual; coated ×2.5,
+  capped at 6 / 12 months for corrosion). Presented as an estimate.
+- Progress transfer merges the three new keys (best tempo max, guitars by id
+  with the union of change dates, seen badges union).
+- Speed ramp maths is pure (`lib/music/speedTrainer.ts`); the page's example
+  table uses it. Hook `useSpeedTrainer` is the same lookahead scheduler as
+  the metronome, with tempo decided on each bar line.
+- Contextual links from the metronome, string tension calculator, homepage
+  grid; both tools are in `TOOL_PAGES` (nav, footer, sitemap, share images).
+
+### Bing
+
+- **IndexNow**: key file `public/87bd2149a2a253fd6f407187961638ea.txt`;
+  `npm run indexnow` submits the live sitemap (or `-- --since YYYY-MM-DD`,
+  or specific paths) after a deploy. Shared with Yandex, Seznam, Naver.
+- Optional `BING_SITE_VERIFICATION` env var emits the `msvalidate.01` meta
+  tag; not needed if Bing is verified by importing from Search Console.
+
+Verified: `tsc`, build, `audit:seo` (364 pages, 0 issues), `audit:links`
+(0 orphans, depth ≤ 2), unit checks of the ramp/string maths, Playwright at
+390 px (ramp 200→212 on the bar line, best saved, gap preset, guitar add →
+ics download → change logged → history, 5 achievements unlocked and "New"
+cleared on revisit, no overflow).
+
+### Not done
+
+- The new tools are English only.
+- First Start in a cold headless browser once failed to advance (audio
+  device start-up); not reproduced in later runs. Worth a manual check on
+  a phone.

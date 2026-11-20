@@ -224,6 +224,9 @@ export default function StringTensionPage() {
           After restringing, tune with the{" "}
           <Link href="/">chromatic tuner</Link> and give a new heavy set a day
           to settle; wound strings stretch noticeably in their first hours.
+          Log the change in the{" "}
+          <Link href="/string-change-tracker">string change tracker</Link> to
+          get a reminder when the next set is due.
         </p>
       </ToolPageLayout>
     </>

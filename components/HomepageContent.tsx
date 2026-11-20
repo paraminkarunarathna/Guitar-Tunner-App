@@ -207,6 +207,9 @@ export function HomepageContent() {
             "/scales",
             "/strumming-patterns",
             "/ear-training",
+            "/speed-trainer",
+            "/string-change-tracker",
+            "/chord-quiz",
           ].map((href) => TOOL_PAGES.find((tool) => tool.href === href)!).map((tool) => (
             <Link
               key={tool.href}

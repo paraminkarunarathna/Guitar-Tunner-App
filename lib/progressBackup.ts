@@ -9,6 +9,8 @@
  *  Importing merges, per kind of data, so it can never lose progress and
  *  importing the same backup twice changes nothing. */
 
+import { mergeGuitars, sanitizeGuitars } from './stringLife';
+
 export const BACKUP_APP = 'guitartunepro';
 export const BACKUP_VERSION = 1;
 const MAX_BACKUP_BYTES = 1_000_000;
@@ -145,6 +147,36 @@ const MERGERS: Record<string, Merger> = {
     const a = parse<{ bestStreak?: number; byAnswer?: Tally }>(l) ?? {};
     const b = parse<{ bestStreak?: number; byAnswer?: Tally }>(i) ?? {};
     return json({ bestStreak: Math.max(a.bestStreak ?? 0, b.bestStreak ?? 0), byAnswer: mergeTally(a.byAnswer, b.byAnswer) });
+  },
+  'gtp-speed-trainer': (l, i) => {
+    type Rec = { best: number; on: string; sessions: number };
+    type Saved = { exercises?: Record<string, Rec>; plan?: unknown; current?: string };
+    const a = parse<Saved>(l) ?? {};
+    const b = parse<Saved>(i) ?? {};
+    const exercises: Record<string, Rec> = { ...(a.exercises ?? {}) };
+    for (const [name, rec] of Object.entries(b.exercises ?? {})) {
+      const mine = exercises[name];
+      if (!rec || typeof rec.best !== 'number') continue;
+      exercises[name] = !mine
+        ? rec
+        : {
+            best: Math.max(mine.best, rec.best),
+            on: rec.best > mine.best ? rec.on : mine.on,
+            sessions: Math.max(mine.sessions || 0, rec.sessions || 0),
+          };
+    }
+    // This device's last plan and exercise stay as they are.
+    return json({ ...a, exercises });
+  },
+  'gtp-strings': (l, i) => {
+    const a = sanitizeGuitars(parse<{ guitars?: unknown }>(l)?.guitars);
+    const b = sanitizeGuitars(parse<{ guitars?: unknown }>(i)?.guitars);
+    return json({ guitars: mergeGuitars(a, b) });
+  },
+  'gtp-achievements': (l, i) => {
+    const a = parse<{ seen?: string[] }>(l)?.seen ?? [];
+    const b = parse<{ seen?: string[] }>(i)?.seen ?? [];
+    return json({ seen: [...new Set([...a, ...b])].filter((x) => typeof x === 'string') });
   },
   'gtp-fretboard-trainer': (l, i) => {
     const a = parse<{ bestStreak?: number; byString?: Tally }>(l) ?? {};

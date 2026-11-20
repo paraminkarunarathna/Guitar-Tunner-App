@@ -58,8 +58,16 @@ export default function MyProgressPage() {
         and streak; days finished in the <Link href="/beginner-guitar-course">30-day beginner
         course</Link>; best scores in the <Link href="/rhythm-trainer">rhythm trainer</Link>; and
         accuracy in the <Link href="/ear-training">ear trainer</Link> and{" "}
-        <Link href="/fretboard-trainer">fretboard trainer</Link>. All of it is stored in this
+        <Link href="/fretboard-trainer">fretboard trainer</Link>; your best tempos in the{" "}
+        <Link href="/speed-trainer">speed trainer</Link>; and the guitars in your{" "}
+        <Link href="/string-change-tracker">string change tracker</Link>. All of it is stored in this
         browser and nowhere else.
+      </p>
+      <h2>How Achievements Work</h2>
+      <p>
+        Achievements are milestones worked out from the progress above — streaks, days practised,
+        tools tried, best scores and tempos. There is nothing extra to switch on: anything you have
+        already done counts, and they move to another device along with the rest of your progress.
       </p>
       <h2>Moving to a New Phone or Computer</h2>
       <p>

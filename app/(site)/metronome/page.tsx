@@ -282,7 +282,9 @@ export default function MetronomePage() {
         </p>
         <p>
           Not sure what tempo a song is? <Link href="/tap-tempo">Tap it out</Link> to find the BPM, then bring it
-          here to practise. Plan a whole set with the <Link href="/setlist-builder">setlist builder</Link>.
+          here to practise. To push a passage faster without stopping to turn the dial, the{" "}
+          <Link href="/speed-trainer">speed trainer</Link> raises the tempo for you every few bars. Plan a whole set with
+          the <Link href="/setlist-builder">setlist builder</Link>.
         </p>
       </ToolPageLayout>
     </>
