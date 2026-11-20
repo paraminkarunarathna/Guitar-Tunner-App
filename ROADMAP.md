@@ -6,6 +6,7 @@ low-value-content / scaled-content policies.
 
 ---
 
+
 ## Context: the "low value content" flag
 
 Diagnosed 2026-08-21. Four contributing causes, in severity order:
