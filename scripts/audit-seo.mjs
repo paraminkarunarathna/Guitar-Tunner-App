@@ -1,4 +1,4 @@
-/** SEO audit: titles, descriptions, canonicals, H1s, JSON-LD, duplicates.
+/** SEO audit: titles, descriptions, canonicals, H1s, JSON-LD, image alts, duplicates.
  *  Needs: npm run build && npm run start, then: npm run audit:seo
  */
 const sitemap = await (await fetch('http://localhost:3000/sitemap.xml')).text();
@@ -19,7 +19,10 @@ for (const r of routes) {
   const ld    = [...h.matchAll(/type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
   let ldTypes=[], ldBad=0;
   for (const j of ld) { try { const o=JSON.parse(j.replace(/&quot;/g,'"')); ldTypes.push(o['@type']); } catch { ldBad++; } }
-  rows.push({ r, title, desc, canon, h1s, og, ldTypes, ldBad,
+  // Bing Webmaster Tools reports alt="" as missing, so empty counts too.
+  const imgNoAlt = [...h.matchAll(/<img\b[^>]*>/g)].map(m=>m[0])
+    .filter(tag => !(tag.match(/\balt="([^"]*)"/)?.[1] ?? '').trim());
+  rows.push({ r, title, desc, canon, h1s, og, ldTypes, ldBad, imgNoAlt,
               tLen:(title||'').length, dLen:(desc||'').length });
 }
 
@@ -34,6 +37,7 @@ const bad = {
   longDesc: rows.filter(x=>x.dLen>165),
   shortDesc: rows.filter(x=>x.dLen>0 && x.dLen<70),
   ldBad: rows.filter(x=>x.ldBad>0),
+  imgNoAlt: rows.filter(x=>x.imgNoAlt.length>0),
 };
 const dupe = (key) => {
   const m=new Map(); rows.forEach(x=>{ const v=x[key]; if(!v) return; m.set(v,(m.get(v)||[]).concat(x.r)); });
@@ -43,7 +47,7 @@ const dupe = (key) => {
 console.log(`audited ${rows.length} pages\n`);
 for (const [k,v] of Object.entries(bad)) {
   console.log(`${k.padEnd(12)} ${v.length}`);
-  v.slice(0,5).forEach(x=>console.log(`    ${x.r}  ${k.includes('Title')?`(${x.tLen}) ${x.title}`:k.includes('Desc')?`(${x.dLen})`:k.includes('h1')?JSON.stringify(x.h1s):''}`));
+  v.slice(0,5).forEach(x=>console.log(`    ${x.r}  ${k.includes('Title')?`(${x.tLen}) ${x.title}`:k.includes('Desc')?`(${x.dLen})`:k.includes('h1')?JSON.stringify(x.h1s):k==='imgNoAlt'?x.imgNoAlt[0].slice(0,90):''}`));
   if (v.length>5) console.log(`    … ${v.length-5} more`);
 }
 console.log(`\nduplicate titles      : ${dupe('title').length}`);

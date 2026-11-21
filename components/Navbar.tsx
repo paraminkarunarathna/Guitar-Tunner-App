@@ -166,7 +166,10 @@ export function Navbar({
                   every page to fill a 32px box. */}
               <img
                 src="/android-chrome-192x192.png"
-                alt=""
+                // A real alt, not alt="": Bing Webmaster Tools reports an
+                // empty alt as missing. aria-hidden stays, so screen readers
+                // don't read the brand twice (the link text already says it).
+                alt="GuitarTunePro logo"
                 aria-hidden="true"
                 width={192}
                 height={192}

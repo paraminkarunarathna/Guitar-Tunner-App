@@ -234,7 +234,7 @@
  "components/LocalizedTunerPage.tsx": "2026-10-17",
  "components/Metronome/Metronome.tsx": "2026-10-25",
  "components/MicrophoneStatus.tsx": "2026-08-21",
- "components/Navbar.tsx": "2026-11-13",
+ "components/Navbar.tsx": "2026-11-22",
  "components/NoteDisplay.tsx": "2026-03-21",
  "components/NoteFrequencyChart/NoteFrequencyChart.tsx": "2026-10-28",
  "components/NotFoundContent.tsx": "2026-10-17",
