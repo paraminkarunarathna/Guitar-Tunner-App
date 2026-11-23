@@ -279,3 +279,61 @@ export function strikeFork(frequency: number, volume = 0.6): () => void {
     window.setTimeout(() => master.disconnect(), 350);
   };
 }
+
+/** A short steady tone at an exact time, for listening tests: a sine with
+ *  two quiet harmonics (so it reads as a pitch, not a beep) and 30 ms ramps
+ *  so the start and stop do not click. `pure` drops the harmonics. */
+export function toneAt(
+  ctx: AudioContext,
+  frequency: number,
+  at: number,
+  duration: number,
+  { peak = 0.2, pure = false }: { peak?: number; pure?: boolean } = {},
+) {
+  const amp = ctx.createGain();
+  amp.gain.setValueAtTime(0.0001, at);
+  amp.gain.exponentialRampToValueAtTime(peak, at + 0.03);
+  amp.gain.setValueAtTime(peak, at + duration - 0.03);
+  amp.gain.exponentialRampToValueAtTime(0.0001, at + duration);
+  amp.connect(ctx.destination);
+  const partials = pure ? [[1, 1]] : [[1, 1], [2, 0.3], [3, 0.12]];
+  for (const [ratio, level] of partials) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(frequency * ratio, at);
+    gain.gain.value = level;
+    osc.connect(gain);
+    gain.connect(amp);
+    osc.start(at);
+    osc.stop(at + duration + 0.02);
+  }
+}
+
+/** A pure sine that holds until stopped, with a slow fade in and out. The
+ *  fade matters for high-frequency hearing tests: an abrupt start is a
+ *  broadband click that can be heard even when the tone itself cannot. */
+export function startSine(frequency: number, volume = 0.1, fade = 0.25): () => void {
+  const ctx = getAudioContext();
+  const now = ctx.currentTime;
+  const amp = ctx.createGain();
+  amp.gain.setValueAtTime(0, now);
+  amp.gain.linearRampToValueAtTime(volume, now + fade);
+  amp.connect(ctx.destination);
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.value = frequency;
+  osc.connect(amp);
+  osc.start(now);
+  let stopped = false;
+  return () => {
+    if (stopped) return;
+    stopped = true;
+    const t = ctx.currentTime;
+    amp.gain.cancelScheduledValues(t);
+    amp.gain.setValueAtTime(amp.gain.value, t);
+    amp.gain.linearRampToValueAtTime(0, t + fade);
+    osc.stop(t + fade + 0.05);
+    window.setTimeout(() => amp.disconnect(), (fade + 0.1) * 1000);
+  };
+}

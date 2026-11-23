@@ -10,6 +10,7 @@
  *  importing the same backup twice changes nothing. */
 
 import { mergeGuitars, sanitizeGuitars } from './stringLife';
+import { TESTS_STORAGE_KEY, mergeResults, sanitizeResults } from './musicTests';
 
 export const BACKUP_APP = 'guitartunepro';
 export const BACKUP_VERSION = 1;
@@ -173,6 +174,8 @@ const MERGERS: Record<string, Merger> = {
     const b = sanitizeGuitars(parse<{ guitars?: unknown }>(i)?.guitars);
     return json({ guitars: mergeGuitars(a, b) });
   },
+  [TESTS_STORAGE_KEY]: (l, i) =>
+    json(mergeResults(sanitizeResults(parse(l)), sanitizeResults(parse(i)))),
   'gtp-achievements': (l, i) => {
     const a = parse<{ seen?: string[] }>(l)?.seen ?? [];
     const b = parse<{ seen?: string[] }>(i)?.seen ?? [];

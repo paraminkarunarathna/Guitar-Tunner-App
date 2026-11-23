@@ -1083,3 +1083,46 @@ cleared on revisit, no overflow).
 - First Start in a cold headless browser once failed to advance (audio
   device start-up); not reproduced in later runs. Worth a manual check on
   a phone.
+
+## Step 29 — Shareable music tests: perfect pitch, tone deaf, hearing age  ✅ DONE (2026-11-23)
+
+Reach: three high-volume searches the site did not cover ("perfect pitch
+test", "tone deaf test", "hearing age test"), each built around a score
+people want to share and a link that dares a friend to beat it.
+
+| Route | What it does |
+|---|---|
+| `/perfect-pitch-test` | 12 notes, C3–B5, no reference. A burst of random off-grid tones before each note wipes short-term pitch memory, so relative pitch cannot work out the answer; consecutive notes never share a name or sit within 3 semitones; timbre alternates pluck/tone. Score out of 12 (chance is 1). |
+| `/tone-deaf-test` | Higher or lower? Adaptive 2-down/1-up staircase (Levitt 1971; ×0.7 / ×1.4), random centre pitch E4–E5, tones split symmetrically around it. Ends after 8 reversals, 45 trials, or two "harder" steps at the 1 ¢ floor. Threshold = geometric mean of the last 6 reversals. |
+| `/hearing-age-test` | 1 kHz volume check, then 8 → 20 kHz pure tones with slow fades (an abrupt onset clicks audibly even when the tone is out of range). One **silent catch trial**: answering "I hear it" to it marks the result unreliable and hides sharing. Tones above the device's Nyquist limit are not played. |
+| `/music-tests` | Hub with the visitor's bests, ItemList JSON-LD, links to the longer ear trainers. In the navbar More menu and the sitemap. |
+| `/share/test?t=&s=` | noindex, self-canonical landing page for a shared score with a generated card (`/share/test/image`), "Your friend scored …" and a CTA into the test with `?vs=`. |
+
+- **Viral loop:** every result has "Share your result" (native share sheet on
+  touch, clipboard elsewhere, link preview is the score card), "Challenge a
+  friend" (`/<test>?vs=<score>` — the test opens with a challenge banner and
+  ends with "You beat your friend!" / "Rematch?"), and "Save image".
+- One module, `lib/musicTests.ts`: verdicts, share URL parsing (clamped —
+  scores are claims), saved results (`gtp-music-tests`, merged by the
+  progress backup), staircase and sequence logic. Score tables on each page
+  are generated from the same verdict functions as the results.
+- Simulated listeners (psychometric curve, 200 runs each) recover their true
+  threshold: 10 ¢ → median 8, 30 ¢ → 23, 100 ¢ → 68, in 25–42 trials.
+- Six new achievements in a new "Ears" group; music test bests on
+  `/my-progress`; each test logs a practice day.
+- Homepage section "How Good Are Your Ears?"; tests in `TOOL_PAGES` (nav,
+  footer, sitemap, cross-links); per-test share images.
+- Verified: `tsc`, build, `audit:seo` (368 pages, 0 issues), `audit:links`
+  (0 orphans, depth ≤ 2), Playwright at 390 px: challenge banner, a full run
+  of each test, catch trial blocks sharing, challenge link copied, share page
+  + PNG, progress tiles and achievements, no overflow, no console errors
+  (other than the Vercel analytics script, which only exists on Vercel).
+
+### Not done
+
+- English only. The tests are the strongest candidates for es/pt/fr/de next
+  ("test de oído absoluto", "teste de ouvido absoluto", "test oreille
+  absolue", "absolutes Gehör Test").
+- Hearing results depend on uncalibrated speakers; the copy says so and the
+  page is not a medical test.
+- After deploy: `npm run indexnow -- /perfect-pitch-test /tone-deaf-test /hearing-age-test /music-tests /`.

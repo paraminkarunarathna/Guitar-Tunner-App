@@ -24,9 +24,17 @@ export interface AchievementFacts {
   speedTop: number;
   guitarsTracked: number;
   stringChanges: number;
+  /** Music tests with at least one result. */
+  testsTaken: number;
+  /** Best perfect pitch score, 0–12. */
+  pitchBest: number;
+  /** Best pitch-discrimination threshold in cents; 0 when never taken. */
+  pitchCents: number;
+  /** Highest frequency heard in the hearing test, Hz. */
+  hearingTop: number;
 }
 
-export type AchievementGroup = 'Habit' | 'Explore' | 'Skills' | 'Gear';
+export type AchievementGroup = 'Habit' | 'Explore' | 'Skills' | 'Ears' | 'Gear';
 
 export interface Achievement {
   id: string;
@@ -68,6 +76,14 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'rhythm-90', title: 'In the Pocket', description: 'Score 90 or more in the rhythm trainer', group: 'Skills', goal: 90, value: (f) => f.rhythmBest, href: '/rhythm-trainer' },
   { id: 'speed-120', title: 'Up to Speed', description: 'Hold 120 BPM in the speed trainer', group: 'Skills', goal: 120, value: (f) => f.speedTop, href: '/speed-trainer' },
   { id: 'speed-180', title: 'Shredder', description: 'Hold 180 BPM in the speed trainer', group: 'Skills', goal: 180, value: (f) => f.speedTop, href: '/speed-trainer' },
+
+  // Ears — the music tests
+  { id: 'tests-1', title: 'Ear Check', description: 'Take any of the music tests', group: 'Ears', goal: 1, value: (f) => f.testsTaken, href: '/music-tests' },
+  { id: 'tests-3', title: 'Full Hearing', description: 'Take all three music tests', group: 'Ears', goal: 3, value: (f) => f.testsTaken, href: '/music-tests' },
+  { id: 'pitch-8', title: 'Pitch Memory', description: 'Score 8 or more in the perfect pitch test', group: 'Ears', goal: 8, value: (f) => f.pitchBest, href: '/perfect-pitch-test' },
+  { id: 'pitch-12', title: 'Perfect Pitch', description: 'Score 12 out of 12 in the perfect pitch test', group: 'Ears', goal: 12, value: (f) => f.pitchBest, href: '/perfect-pitch-test' },
+  { id: 'cents-10', title: 'Fine Tuned', description: 'Hear a pitch change of 10 cents or less', group: 'Ears', goal: 1, value: (f) => (f.pitchCents > 0 && f.pitchCents <= 10 ? 1 : 0), href: '/tone-deaf-test' },
+  { id: 'hearing-17', title: 'Young Ears', description: 'Hear a 17 kHz tone in the hearing age test', group: 'Ears', goal: 17000, value: (f) => f.hearingTop, href: '/hearing-age-test' },
 
   // Gear
   { id: 'strings-track', title: 'String Keeper', description: 'Track a guitar in the string change tracker', group: 'Gear', goal: 1, value: (f) => f.guitarsTracked, href: '/string-change-tracker' },

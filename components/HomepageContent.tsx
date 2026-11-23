@@ -233,6 +233,50 @@ export function HomepageContent() {
         </div>
       </section>
 
+      {/* Music tests — the shareable ones */}
+      <section className="max-w-5xl mx-auto px-6 pt-12 relative" aria-labelledby="tests-heading">
+        <div className="rounded-3xl border border-brass/30 bg-brass/5 p-6 sm:p-10">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 text-xs font-bold text-brass uppercase tracking-widest mb-4 border border-brass/25 bg-brass/5 px-4 py-1.5 rounded-full">
+              2-minute music tests
+            </div>
+            <h2 id="tests-heading" className="text-3xl sm:text-4xl font-extrabold text-ink mb-3 tracking-tight">
+              How Good Are Your Ears?
+            </h2>
+            <p className="text-ink-muted max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
+              Find out if you have perfect pitch, whether you&apos;re really tone
+              deaf, and how old your ears sound — then send a friend your score
+              to beat.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {["/perfect-pitch-test", "/tone-deaf-test", "/hearing-age-test"]
+              .map((href) => TOOL_PAGES.find((tool) => tool.href === href)!)
+              .map((tool) => (
+                <Link
+                  key={tool.href}
+                  href={tool.href}
+                  className="group flex flex-col justify-between rounded-2xl border border-line bg-surface/60 p-5 hover:border-brass/40 transition-smooth"
+                >
+                  <div>
+                    <p className="text-2xs font-bold uppercase tracking-widest text-brass mb-2">{tool.tagline}</p>
+                    <h3 className="font-bold text-lg text-ink mb-2 group-hover:text-brass-hover transition-colors">{tool.label}</h3>
+                    <p className="text-xs text-ink-muted leading-relaxed">{tool.blurb}</p>
+                  </div>
+                  <div className="text-xs text-brass font-bold group-hover:translate-x-1 transition-transform duration-300 pt-4">
+                    Take the test →
+                  </div>
+                </Link>
+              ))}
+          </div>
+          <p className="mt-6 text-center text-sm">
+            <Link href="/music-tests" className="font-semibold text-brass hover:text-brass-hover">
+              See all music tests →
+            </Link>
+          </p>
+        </div>
+      </section>
+
       {/* Chord library cross-promo */}
       <section className="max-w-5xl mx-auto px-6 pt-12 relative">
         <Link

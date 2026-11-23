@@ -11,6 +11,7 @@ import { RHYTHMS } from "@/lib/rhythms";
 import { evaluateAchievements, loadSeen, nextAchievement, saveSeen, type AchievementState } from "@/lib/achievements";
 import { loadSpeed } from "@/lib/music/speedTrainer";
 import { loadGuitars } from "@/lib/stringLife";
+import { MUSIC_TESTS, MUSIC_TEST_IDS, loadResults as loadTestResults, verdictFor } from "@/lib/musicTests";
 import {
   clearProgress,
   collectBackup,
@@ -51,6 +52,7 @@ function snapshot() {
   const quiz = read<{ bestStreak?: number }>("gtp-chord-quiz");
   const speed = loadSpeed();
   const guitars = loadGuitars();
+  const tests = loadTestResults();
   const daily = challengeStats(loadResults(), challengeNumber(today));
   const courseDone = COURSE_DAYS.filter((d) => course[d.day]).length;
   const minutes = Math.round(days.reduce((sum, d) => sum + (log[d].minutes || 0), 0));
@@ -71,6 +73,10 @@ function snapshot() {
     speedTop: Math.max(0, ...Object.values(speed.exercises).map((e) => e.best || 0)),
     guitarsTracked: guitars.length,
     stringChanges: guitars.reduce((sum, g) => sum + g.history.length, 0),
+    testsTaken: Object.keys(tests).length,
+    pitchBest: tests["perfect-pitch"]?.best ?? 0,
+    pitchCents: tests["tone-deaf"]?.best ?? 0,
+    hearingTop: tests["hearing-age"]?.best ?? 0,
   });
   return {
     achievements,
@@ -87,6 +93,12 @@ function snapshot() {
       .sort((a, b) => b.score - a.score),
     ear: { best: ear?.bestStreak ?? 0, acc: accuracy(ear?.byAnswer) },
     fret: { best: fret?.bestStreak ?? 0, acc: accuracy(fret?.byString) },
+    tests: MUSIC_TEST_IDS.filter((id) => tests[id]).map((id) => ({
+      id,
+      name: MUSIC_TESTS[id].name,
+      href: MUSIC_TESTS[id].href,
+      best: verdictFor(id, tests[id]!.best).score,
+    })),
   };
 }
 
@@ -378,6 +390,21 @@ export function ProgressCenter() {
             <Tile label="Daily challenge" value={snap.daily.played} sub={`Streak ${snap.daily.streak} · ${snap.daily.perfect} perfect`} href="/daily-challenge" />
             <Tile label="Ear training" value={`best ${snap.ear.best}`} sub={snap.ear.acc ? `${snap.ear.acc.pct}% of ${snap.ear.acc.n} answers` : "Not started"} href="/ear-training" />
             <Tile label="Fretboard" value={`best ${snap.fret.best}`} sub={snap.fret.acc ? `${snap.fret.acc.pct}% of ${snap.fret.acc.n} answers` : "Not started"} href="/fretboard-trainer" />
+            <div className="col-span-2 rounded-2xl border border-line bg-surface/40 p-4">
+              <p className="eyebrow mb-2">Music test bests</p>
+              {snap.tests.length ? (
+                <ul className="space-y-1 text-sm">
+                  {snap.tests.map((t) => (
+                    <li key={t.id} className="flex justify-between gap-3 text-ink">
+                      <Link href={t.href} className="hover:text-brass">{t.name}</Link>
+                      <span className="font-mono tabular-nums text-ink-muted">{t.best}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <Link href="/music-tests" className="text-sm text-brass font-semibold">Test your ears →</Link>
+              )}
+            </div>
             <div className="col-span-2 rounded-2xl border border-line bg-surface/40 p-4">
               <p className="eyebrow mb-2">Rhythm trainer bests</p>
               {snap.rhythm.length ? (

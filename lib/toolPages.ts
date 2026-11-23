@@ -27,6 +27,27 @@ export const TOOL_PAGES: ToolPageEntry[] = [
       "Two intervals, two chord types and a fretboard note — the same five for everyone today, one try each. Keep a streak and share your score.",
   },
   {
+    href: "/perfect-pitch-test",
+    label: "Perfect Pitch Test",
+    tagline: "Can you name the note?",
+    blurb:
+      "Twelve notes with no reference tone — name each one and find out if you have perfect pitch. Share your score and challenge a friend to beat it.",
+  },
+  {
+    href: "/tone-deaf-test",
+    label: "Tone Deaf Test",
+    tagline: "Higher or lower?",
+    blurb:
+      "Two tones, higher or lower? The gap shrinks until it finds the smallest pitch change you can hear — in cents, in about two minutes.",
+  },
+  {
+    href: "/hearing-age-test",
+    label: "Hearing Age Test",
+    tagline: "How high can you hear?",
+    blurb:
+      "Tones climb from 8 kHz to 20 kHz. The highest you can hear shows how old your ears sound — with a silent catch trial so nobody can fake it.",
+  },
+  {
     href: "/practice-routine",
     label: "Practice Routine",
     tagline: "Daily plan & streaks",

@@ -73,6 +73,7 @@ const MENUS: {
     align: "end",
     width: "w-56",
     entries: [
+      { href: "/music-tests", label: "Music Tests" },
       { href: "/articles", label: "Articles" },
       { href: "/printable-guitar-charts", label: "Printable Charts" },
       { href: "/my-progress", label: "Your Progress" },
