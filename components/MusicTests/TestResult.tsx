@@ -1,22 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, Download, RotateCcw, Share2, Swords, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { Locale } from "@/lib/i18n/tuner";
+import { TESTS_UI } from "@/lib/i18n/tools/testsUi";
+import { fmt } from "@/lib/i18n/tools/ui";
 import {
-  MUSIC_TESTS,
   MUSIC_TEST_IDS,
   SITE_URL,
+  TEST_PATHS,
   brag,
   challengePath,
   compareScores,
   parseScore,
   shareQuery,
   sharePath,
+  testName,
+  tierInSentence,
   verdictFor,
   type MusicTestId,
 } from "@/lib/musicTests";
+
+/** "**bold**" → <strong>, the only inline markup the test text uses. */
+export function rich(text: string) {
+  return text.split("**").map((part, i) => (i % 2 === 1 ? <strong key={i} className="text-ink">{part}</strong> : <Fragment key={i}>{part}</Fragment>));
+}
 
 /** The score a friend's challenge link carries (`?vs=`), read after mount so
  *  the page can stay static. */
@@ -28,24 +38,28 @@ export function useChallengeScore(id: MusicTestId): number | null {
   return vs;
 }
 
-export function ChallengeBanner({ id, vs }: { id: MusicTestId; vs: number | null }) {
+export function ChallengeBanner({ id, vs, locale = "en" }: { id: MusicTestId; vs: number | null; locale?: Locale }) {
   if (vs === null) return null;
-  const v = verdictFor(id, vs);
+  const ui = TESTS_UI[locale];
+  const v = verdictFor(id, vs, locale);
   return (
-    <div className="mb-6 flex items-center gap-3 rounded-2xl border border-brass/40 bg-brass/10 px-4 py-3 text-sm text-ink">
+    <div className="mb-6 flex items-center gap-3 rounded-2xl border border-brass/40 bg-brass/10 px-4 py-3 text-left text-sm text-ink">
       <Swords className="h-5 w-5 shrink-0 text-brass" />
       <p>
-        <span className="font-bold">You&apos;ve been challenged.</span> A friend scored{" "}
-        <span className="font-bold tabular-nums">{v.score}</span> ({v.tier.toLowerCase()}). Can you beat it?
+        <span className="font-bold">{ui.challengedTitle}</span>{" "}
+        {rich(fmt(ui.challengedBody, { score: v.score, tier: tierInSentence(v.tier, locale) }))}
       </p>
     </div>
   );
 }
 
-const BTN_PRIMARY =
+export const BTN_PRIMARY =
   "inline-flex items-center gap-2 rounded-full bg-brass px-6 py-3 text-sm font-bold text-brass-contrast hover:bg-brass-hover transition-colors";
-const BTN_SECONDARY =
+export const BTN_SECONDARY =
   "inline-flex items-center gap-2 rounded-full border border-line-strong bg-surface/60 px-5 py-3 text-sm font-semibold text-ink hover:border-brass/50 hover:text-brass transition-colors";
+
+const CHIP =
+  "rounded-full border border-line bg-surface/40 px-4 py-2 text-sm text-ink hover:border-brass/40 hover:text-brass transition-colors";
 
 interface TestResultProps {
   id: MusicTestId;
@@ -58,14 +72,17 @@ interface TestResultProps {
   note?: React.ReactNode;
   /** Hide the share buttons, e.g. when the result is not trustworthy. */
   shareable?: boolean;
+  locale?: Locale;
 }
 
-export function TestResult({ id, score, best, newBest, vs, onRetry, note, shareable = true }: TestResultProps) {
-  const v = verdictFor(id, score);
-  const [status, setStatus] = useState<"shared" | "copied" | "challenge" | "failed" | null>(null);
-  const shareUrl = `${SITE_URL}${sharePath(id, score)}`;
-  const challengeUrl = `${SITE_URL}${challengePath(id, score)}`;
+export function TestResult({ id, score, best, newBest, vs, onRetry, note, shareable = true, locale = "en" }: TestResultProps) {
+  const ui = TESTS_UI[locale];
+  const v = verdictFor(id, score, locale);
+  const [status, setStatus] = useState<"copied" | "challenge" | "failed" | null>(null);
+  const shareUrl = `${SITE_URL}${sharePath(id, score, locale)}`;
+  const challengeUrl = `${SITE_URL}${challengePath(id, score, locale)}`;
   const outcome = vs === null ? null : compareScores(id, score, vs);
+  const theirs = vs === null ? "" : verdictFor(id, vs, locale).score;
 
   const flash = (s: typeof status) => {
     setStatus(s);
@@ -73,10 +90,10 @@ export function TestResult({ id, score, best, newBest, vs, onRetry, note, sharea
   };
 
   const share = async () => {
-    const text = `${brag(id, score)} 🎧 Can you beat me?`;
+    const text = `${brag(id, score, locale)} 🎧 ${ui.beatMe}`;
     try {
       if (navigator.share && window.matchMedia("(pointer: coarse)").matches) {
-        await navigator.share({ title: MUSIC_TESTS[id].name, text, url: shareUrl });
+        await navigator.share({ title: testName(id, locale), text, url: shareUrl });
         return;
       }
       await navigator.clipboard.writeText(`${text} ${shareUrl}`);
@@ -95,9 +112,12 @@ export function TestResult({ id, score, best, newBest, vs, onRetry, note, sharea
     }
   };
 
+  // The daily challenge exists only in English.
+  const englishOnly = locale === "en" ? {} : { lang: "en" };
+
   return (
     <div className="text-center" role="status" aria-live="polite">
-      <p className="eyebrow mb-2">Your result</p>
+      <p className="eyebrow mb-2">{ui.yourResult}</p>
       <p className="text-5xl sm:text-6xl font-bold text-ink tabular-nums">{v.score}</p>
       <p className="mt-2 text-xl font-bold text-brass">{v.tier}</p>
       <div className="mx-auto mt-4 h-2.5 max-w-sm overflow-hidden rounded-full bg-surface-raised" aria-hidden>
@@ -109,22 +129,18 @@ export function TestResult({ id, score, best, newBest, vs, onRetry, note, sharea
       {(newBest || best !== null) && (
         <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-ink-muted">
           <Trophy className="h-4 w-4 text-brass" />
-          {newBest ? "New personal best!" : `Your best: ${verdictFor(id, best!).score}`}
+          {newBest ? ui.newBest : fmt(ui.yourBest, { score: verdictFor(id, best!, locale).score })}
         </p>
       )}
 
-      {outcome !== null && vs !== null && (
+      {outcome !== null && (
         <p
           className={cn(
             "mx-auto mt-4 max-w-md rounded-xl border px-4 py-2 text-sm font-semibold",
             outcome === 1 ? "border-in-tune/50 bg-in-tune/10 text-in-tune" : outcome === 0 ? "border-line-strong text-ink" : "border-off/50 bg-off/10 text-off",
           )}
         >
-          {outcome === 1
-            ? `You beat your friend (${verdictFor(id, vs).score})! Send it back to them.`
-            : outcome === 0
-              ? `A tie with your friend at ${verdictFor(id, vs).score}.`
-              : `Your friend wins this one with ${verdictFor(id, vs).score}. Rematch?`}
+          {fmt(outcome === 1 ? ui.won : outcome === 0 ? ui.tie : ui.lost, { score: theirs })}
         </p>
       )}
 
@@ -133,41 +149,37 @@ export function TestResult({ id, score, best, newBest, vs, onRetry, note, sharea
           <>
             <button type="button" onClick={share} className={BTN_PRIMARY}>
               {status === "copied" ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
-              {status === "copied" ? "Copied — paste it anywhere" : status === "failed" ? "Couldn't copy" : "Share your result"}
+              {status === "copied" ? ui.copied : status === "failed" ? ui.couldntCopy : ui.share}
             </button>
             <button type="button" onClick={copyChallenge} className={BTN_SECONDARY}>
               {status === "challenge" ? <Check className="h-4 w-4" /> : <Swords className="h-4 w-4" />}
-              {status === "challenge" ? "Challenge link copied" : "Challenge a friend"}
+              {status === "challenge" ? ui.challengeCopied : ui.challenge}
             </button>
-            <a href={`/share/test/image?${shareQuery(id, score)}`} download={`${id}-test-result.png`} className={BTN_SECONDARY}>
+            <a href={`/share/test/image?${shareQuery(id, score, locale)}`} download={`${id}-test-result.png`} className={BTN_SECONDARY}>
               <Download className="h-4 w-4" />
-              Save image
+              {ui.saveImage}
             </a>
           </>
         )}
         <button type="button" onClick={onRetry} className={BTN_SECONDARY}>
           <RotateCcw className="h-4 w-4" />
-          Try again
+          {ui.tryAgain}
         </button>
       </div>
 
       <div className="mt-8 border-t border-line pt-6">
-        <p className="eyebrow mb-3">Test your ears some more</p>
+        <p className="eyebrow mb-3">{ui.moreTests}</p>
         <div className="flex flex-wrap justify-center gap-2">
           {MUSIC_TEST_IDS.filter((other) => other !== id).map((other) => (
-            <Link
-              key={other}
-              href={MUSIC_TESTS[other].href}
-              className="rounded-full border border-line bg-surface/40 px-4 py-2 text-sm text-ink hover:border-brass/40 hover:text-brass transition-colors"
-            >
-              {MUSIC_TESTS[other].name}
+            <Link key={other} href={TEST_PATHS[other][locale]} className={CHIP}>
+              {testName(other, locale)}
             </Link>
           ))}
-          <Link href="/daily-challenge" className="rounded-full border border-line bg-surface/40 px-4 py-2 text-sm text-ink hover:border-brass/40 hover:text-brass transition-colors">
-            Daily Challenge
+          <Link href="/daily-challenge" className={CHIP} {...englishOnly}>
+            {ui.dailyChallenge}
           </Link>
-          <Link href="/music-tests" className="rounded-full border border-line bg-surface/40 px-4 py-2 text-sm text-ink hover:border-brass/40 hover:text-brass transition-colors">
-            All music tests
+          <Link href={TEST_PATHS.hub[locale]} className={CHIP}>
+            {ui.allTests}
           </Link>
         </div>
       </div>
@@ -191,5 +203,3 @@ export const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
-
-export { BTN_PRIMARY, BTN_SECONDARY };

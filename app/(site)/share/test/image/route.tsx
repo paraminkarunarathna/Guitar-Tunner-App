@@ -5,7 +5,7 @@ import { musicTestsHubOgImage, testResultOgImage } from "@/lib/og/tests";
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
   const result = parseShareParams((key) => params.get(key));
-  const image = await (result ? testResultOgImage(result.id, result.score) : musicTestsHubOgImage());
+  const image = await (result ? testResultOgImage(result.id, result.score, result.locale) : musicTestsHubOgImage());
   image.headers.set("Cache-Control", "public, max-age=86400, immutable");
   return image;
 }

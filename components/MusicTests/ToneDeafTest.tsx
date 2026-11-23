@@ -16,7 +16,10 @@ import {
   stepStaircase,
   type Staircase,
 } from "@/lib/musicTests";
-import { BTN_PRIMARY, ChallengeBanner, TestResult, TestShell, today, useChallengeScore } from "./TestResult";
+import type { Locale } from "@/lib/i18n/tuner";
+import { TESTS_UI } from "@/lib/i18n/tools/testsUi";
+import { fmt } from "@/lib/i18n/tools/ui";
+import { BTN_PRIMARY, ChallengeBanner, TestResult, TestShell, rich, today, useChallengeScore } from "./TestResult";
 
 const ID = "tone-deaf" as const;
 const TONE = 0.45;
@@ -47,7 +50,8 @@ function playTrial(trial: Trial) {
   return (start - ctx.currentTime + 2 * TONE + GAP) * 1000;
 }
 
-export function ToneDeafTest() {
+export function ToneDeafTest({ locale = "en" }: { locale?: Locale }) {
+  const ui = TESTS_UI[locale];
   const [mounted, setMounted] = useState(false);
   const vs = useChallengeScore(ID);
   const [phase, setPhase] = useState<"intro" | "listening" | "answer" | "done">("intro");
@@ -128,25 +132,19 @@ export function ToneDeafTest() {
   return (
     <TestShell>
       {phase === "done" ? (
-        <TestResult id={ID} score={score} best={result.best} newBest={result.newBest} vs={vs} onRetry={begin} />
+        <TestResult id={ID} score={score} best={result.best} newBest={result.newBest} vs={vs} onRetry={begin} locale={locale} />
       ) : phase === "intro" ? (
         <div className="text-center py-2">
-          <ChallengeBanner id={ID} vs={vs} />
-          <p className="text-lg text-ink-muted mb-2">
-            You&apos;ll hear two tones. Was the second one <strong className="text-ink">higher</strong> or{" "}
-            <strong className="text-ink">lower</strong>?
-          </p>
-          <p className="text-sm text-ink-subtle mb-6">
-            It starts at a semitone apart and gets harder every time you are right, until it finds the smallest change you can
-            hear. About two minutes. Use headphones in a quiet room for a fair score.
-          </p>
+          <ChallengeBanner id={ID} vs={vs} locale={locale} />
+          <p className="text-lg text-ink-muted mb-2">{rich(ui.tdIntro)}</p>
+          <p className="text-sm text-ink-subtle mb-6">{ui.tdIntroNote}</p>
           <button type="button" onClick={begin} className={BTN_PRIMARY}>
             <Play className="h-4 w-4" />
-            Start the test
+            {ui.start}
           </button>
           {result.best !== null && (
             <p className="mt-4 text-sm text-ink-muted">
-              Your best so far: <span className="font-bold text-ink tabular-nums">{result.best} cents</span>
+              {ui.bestSoFar} <span className="font-bold text-ink tabular-nums">{result.best === 1 ? ui.cent1 : fmt(ui.cents, { n: result.best })}</span>
             </p>
           )}
         </div>
@@ -154,10 +152,10 @@ export function ToneDeafTest() {
         <div className="text-center">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 text-left">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink-subtle">
-              Trial {stairs.trials + (feedback === null ? 1 : 0)}
+              {fmt(ui.tdTrial, { n: stairs.trials + (feedback === null ? 1 : 0) })}
             </p>
             <p className="text-xs text-ink-muted tabular-nums">
-              Difference now: <span className="font-bold text-ink">{Math.max(1, Math.round(trial?.cents ?? 100))}¢</span>
+              {ui.tdDiff} <span className="font-bold text-ink">{Math.max(1, Math.round(trial?.cents ?? 100))}¢</span>
             </p>
           </div>
           <div className="mb-8 h-1.5 overflow-hidden rounded-full bg-surface-raised" aria-hidden>
@@ -165,13 +163,13 @@ export function ToneDeafTest() {
           </div>
 
           <p className="mb-6 text-xl font-semibold text-ink">
-            {phase === "listening" ? "Listen…" : "Was the second tone higher or lower?"}
+            {phase === "listening" ? ui.listen : ui.tdQuestion}
           </p>
 
           <div className="mx-auto grid max-w-md grid-cols-2 gap-3">
             {([
-              [1, "Higher", ArrowUp, "↑"],
-              [-1, "Lower", ArrowDown, "↓"],
+              [1, ui.higher, ArrowUp, "↑"],
+              [-1, ui.lower, ArrowDown, "↓"],
             ] as const).map(([dir, label, Icon, key]) => (
               <button
                 key={label}
@@ -198,7 +196,7 @@ export function ToneDeafTest() {
           <div className="mt-6 min-h-[2.5rem]" role="status" aria-live="polite">
             {feedback !== null ? (
               <p className={cn("text-base font-bold", feedback ? "text-in-tune" : "text-off")}>
-                {feedback ? "Right — getting harder" : "Not that one — a little easier next"}
+                {feedback ? ui.tdRight : ui.tdWrong}
               </p>
             ) : (
               phase === "answer" &&
@@ -208,7 +206,7 @@ export function ToneDeafTest() {
                   onClick={() => playTrial(trial)}
                   className="inline-flex items-center gap-2 text-sm font-semibold text-ink-muted hover:text-brass transition-colors"
                 >
-                  <Volume2 className="h-4 w-4" /> Play again<span className="hidden sm:inline"> (R)</span>
+                  <Volume2 className="h-4 w-4" /> {ui.playAgain}<span className="hidden sm:inline"> (R)</span>
                 </button>
               )
             )}

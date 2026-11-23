@@ -141,6 +141,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       ...dated(routeDir('/music-tests'), 'lib/musicTests.ts'),
       changeFrequency: 'monthly',
       priority: 0.9,
+      ...withAlternates('/music-tests'),
     },
     {
       url: `${siteUrl}/tunings`,

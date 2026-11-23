@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { languageAlternates } from "@/lib/i18n/pages";
 import Link from "next/link";
 import ToolPageLayout from "@/components/ToolPageLayout";
 import { HearingAgeTest } from "@/components/MusicTests/HearingAgeTest";
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   title: "Hearing Age Test — How High Can You Hear?",
   description:
     "Free online hearing age test: tones from 8 kHz to 20 kHz show the highest frequency you can hear and the age your ears sound. Share it and challenge a friend.",
-  alternates: { canonical: "/hearing-age-test" },
+  alternates: { canonical: "/hearing-age-test", languages: languageAlternates("/hearing-age-test") },
   openGraph: {
     title: "Hearing Age Test — How Old Are Your Ears?",
     description: "Find the highest frequency you can hear, from 8 to 20 kHz, and the age it is typical of. Two minutes, free, in your browser.",

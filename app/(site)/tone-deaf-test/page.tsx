@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { languageAlternates } from "@/lib/i18n/pages";
 import Link from "next/link";
 import ToolPageLayout from "@/components/ToolPageLayout";
 import { ToneDeafTest } from "@/components/MusicTests/ToneDeafTest";
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   title: "Tone Deaf Test — Am I Tone Deaf? Find Out",
   description:
     "Free tone deaf test: is the second tone higher or lower? It adapts to find the smallest pitch change you can hear, in cents, in about two minutes.",
-  alternates: { canonical: "/tone-deaf-test" },
+  alternates: { canonical: "/tone-deaf-test", languages: languageAlternates("/tone-deaf-test") },
   openGraph: {
     title: "Tone Deaf Test — Are You Really Tone Deaf?",
     description: "Higher or lower? A two-minute pitch hearing test that finds your limit in cents. Share your score and challenge a friend.",

@@ -5,10 +5,11 @@ import { ArrowRight, Play, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAudioContext, midiToFrequency, pluckFrequency, toneAt } from "@/lib/synth";
 import { logPractice } from "@/lib/practiceLog";
+import type { Locale } from "@/lib/i18n/tuner";
+import { TESTS_UI, testNoteNames } from "@/lib/i18n/tools/testsUi";
+import { fmt } from "@/lib/i18n/tools/ui";
 import {
   MUSIC_TESTS,
-  NOTE_BUTTON_LABELS,
-  NOTE_NAMES,
   PERFECT_PITCH_ROUNDS,
   loadResults,
   perfectPitchSequence,
@@ -40,7 +41,9 @@ function playNote(ctx: AudioContext, midi: number, at: number, round: number) {
   else toneAt(ctx, freq, at, 1.2, { peak: 0.18 });
 }
 
-export function PerfectPitchTest() {
+export function PerfectPitchTest({ locale = "en" }: { locale?: Locale }) {
+  const ui = TESTS_UI[locale];
+  const notesText = testNoteNames(locale);
   const [mounted, setMounted] = useState(false);
   const vs = useChallengeScore(ID);
   const [notes, setNotes] = useState<number[]>([]);
@@ -126,23 +129,19 @@ export function PerfectPitchTest() {
   return (
     <TestShell>
       {phase === "done" ? (
-        <TestResult id={ID} score={score} best={result.best} newBest={result.newBest} vs={vs} onRetry={begin} />
+        <TestResult id={ID} score={score} best={result.best} newBest={result.newBest} vs={vs} onRetry={begin} locale={locale} />
       ) : phase === "intro" ? (
         <div className="text-center py-2">
-          <ChallengeBanner id={ID} vs={vs} />
-          <p className="text-lg text-ink-muted mb-2">
-            {PERFECT_PITCH_ROUNDS} notes, one at a time. Name each one — no reference note, no second guesses.
-          </p>
-          <p className="text-sm text-ink-subtle mb-6">
-            A quick burst of random tones plays before each note to wipe your memory of the last one. Sound on, headphones help.
-          </p>
+          <ChallengeBanner id={ID} vs={vs} locale={locale} />
+          <p className="text-lg text-ink-muted mb-2">{ui.ppIntro}</p>
+          <p className="text-sm text-ink-subtle mb-6">{ui.ppIntroNote}</p>
           <button type="button" onClick={begin} className={BTN_PRIMARY}>
             <Play className="h-4 w-4" />
-            Start the test
+            {ui.start}
           </button>
           {result.best !== null && (
             <p className="mt-4 text-sm text-ink-muted">
-              Your best so far: <span className="font-bold text-ink tabular-nums">{result.best}/{PERFECT_PITCH_ROUNDS}</span>
+              {ui.bestSoFar} <span className="font-bold text-ink tabular-nums">{result.best}/{PERFECT_PITCH_ROUNDS}</span>
             </p>
           )}
         </div>
@@ -150,9 +149,9 @@ export function PerfectPitchTest() {
         <>
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink-subtle">
-              Note {round + 1} of {PERFECT_PITCH_ROUNDS}
+              {fmt(ui.ppNoteOf, { n: round + 1, total: PERFECT_PITCH_ROUNDS })}
             </p>
-            <ol className="flex gap-1" aria-label="Progress">
+            <ol className="flex gap-1" aria-label={ui.progress}>
               {Array.from({ length: PERFECT_PITCH_ROUNDS }, (_, i) => (
                 <li
                   key={i}
@@ -179,12 +178,12 @@ export function PerfectPitchTest() {
               className="inline-flex items-center gap-2 rounded-full border border-line-strong bg-surface/60 px-5 py-2.5 text-sm font-semibold text-ink hover:border-brass/50 hover:text-brass transition-colors disabled:opacity-50"
             >
               <Volume2 className="h-4 w-4" />
-              {phase === "scramble" ? "Listen…" : <>Play again<span className="hidden sm:inline"> (R)</span></>}
+              {phase === "scramble" ? ui.listen : <>{ui.playAgain}<span className="hidden sm:inline"> (R)</span></>}
             </button>
           </div>
 
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2" role="group" aria-label="Which note was it?">
-            {NOTE_BUTTON_LABELS.map((label, pc) => {
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2" role="group" aria-label={ui.ppWhich}>
+            {notesText.buttons.map((label, pc) => {
               const isAnswer = target !== undefined && pc === target % 12;
               const isChosen = pc === chosen;
               const black = label.includes("/");
@@ -220,11 +219,11 @@ export function PerfectPitchTest() {
               <div className="flex flex-col items-center gap-3">
                 <p className={cn("text-lg font-bold", chosen === target % 12 ? "text-in-tune" : "text-off")}>
                   {chosen === target % 12
-                    ? `Correct — ${NOTE_NAMES[target % 12]}`
-                    : `It was ${NOTE_NAMES[target % 12]}${pitchClassDistance(chosen, target % 12) === 1 ? " — only a semitone off" : ""}`}
+                    ? fmt(ui.ppCorrect, { note: notesText.names[target % 12] })
+                    : `${fmt(ui.ppWas, { note: notesText.names[target % 12] })}${pitchClassDistance(chosen, target % 12) === 1 ? ui.ppSemitone : ""}`}
                 </p>
                 <button type="button" onClick={next} className="inline-flex items-center gap-1.5 rounded-full bg-brass px-5 py-2 text-sm font-bold text-brass-contrast hover:bg-brass-hover transition-colors">
-                  {round + 1 >= PERFECT_PITCH_ROUNDS ? "See your score" : "Next note"}
+                  {round + 1 >= PERFECT_PITCH_ROUNDS ? ui.seeScore : ui.ppNext}
                   <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               </div>

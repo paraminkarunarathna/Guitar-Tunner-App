@@ -6,6 +6,10 @@
  *  for a result. A result travels as one number in a URL (`?t=&s=`), so
  *  everything here treats it as a claim: parsed, clamped, never trusted. */
 
+import { LOCALES, type Locale } from './i18n/tuner';
+import { TESTS_UI } from './i18n/tools/testsUi';
+import { fmt } from './i18n/tools/ui';
+
 export type MusicTestId = 'perfect-pitch' | 'tone-deaf' | 'hearing-age';
 
 export interface MusicTestDef {
@@ -76,7 +80,7 @@ export const isMusicTestId = (value: unknown): value is MusicTestId =>
 // ── Verdicts ────────────────────────────────────────────────────────────────
 
 export interface Verdict {
-  /** The big line: "9 out of 12", "8 cents", "17 kHz". */
+  /** The big line: "9/12", "8 cents", "17 kHz". */
   score: string;
   /** Short label for the result tier. */
   tier: string;
@@ -88,41 +92,38 @@ export interface Verdict {
 
 const khz = (hz: number) => `${Number((hz / 1000).toFixed(1))} kHz`;
 
-export function perfectPitchVerdict(score: number): Verdict {
+/** A tier inside a sentence: lower-cased, except in German, where nouns
+ *  keep their capital. */
+export const tierInSentence = (tier: string, locale: Locale) => (locale === 'de' ? tier : tier.toLowerCase());
+
+export function perfectPitchVerdict(score: number, locale: Locale = 'en'): Verdict {
   const s = clamp(score, 0, PERFECT_PITCH_ROUNDS);
-  const base = { score: `${s}/${PERFECT_PITCH_ROUNDS}`, level: s / PERFECT_PITCH_ROUNDS };
-  if (s >= 11)
-    return { ...base, tier: 'Perfect pitch', detail: 'You named almost every note with no reference — the signature of absolute pitch, which is often estimated at around 1 in 10,000 people.' };
-  if (s >= 8)
-    return { ...base, tier: 'Strong pitch memory', detail: 'Well above chance. You hold a stable memory of what notes sound like — many people with absolute pitch score here on unfamiliar timbres.' };
-  if (s >= 5)
-    return { ...base, tier: 'Good pitch memory', detail: 'Clearly better than guessing (chance is 1 in 12). Some notes are anchored in your memory, likely from songs or an instrument you know well.' };
-  if (s >= 3)
-    return { ...base, tier: 'Above chance', detail: 'A little better than guessing. Most musicians land here: they hear relationships between notes, not each note on its own.' };
-  return { ...base, tier: 'Relative pitch listener', detail: 'Like the vast majority of musicians, you hear notes in relation to each other. That is the skill that matters most — and it can be trained.' };
+  const band = s >= 11 ? 0 : s >= 8 ? 1 : s >= 5 ? 2 : s >= 3 ? 3 : 4;
+  return { score: `${s}/${PERFECT_PITCH_ROUNDS}`, level: s / PERFECT_PITCH_ROUNDS, ...TESTS_UI[locale].pp[band] };
 }
 
-export function toneDeafVerdict(cents: number): Verdict {
+/** Upper edge of each tone-deaf band, in cents; anything above the last is
+ *  the final band. */
+export const TONE_DEAF_BANDS = [5, 12, 25, 60, 110];
+
+export function toneDeafVerdict(cents: number, locale: Locale = 'en'): Verdict {
+  const ui = TESTS_UI[locale];
   const c = clamp(cents, 1, 300);
-  const score = `${c} cent${c === 1 ? '' : 's'}`;
-  // log scale: 1 ¢ → 1, 300 ¢ → 0
-  const level = 1 - Math.log(c) / Math.log(300);
-  if (c <= 5)
-    return { score, level, tier: 'Exceptional pitch hearing', detail: `You heard a change of ${c}¢ — a twentieth of a semitone. That is the range of trained musicians and piano tuners.` };
-  if (c <= 12)
-    return { score, level, tier: 'Excellent pitch hearing', detail: 'Finer than most listeners. Small tuning errors on a guitar string will bother you, which is a good thing.' };
-  if (c <= 25)
-    return { score, level, tier: 'Good — not tone deaf', detail: 'A normal, healthy ability to hear pitch. You can tell when a string is noticeably out of tune by ear.' };
-  if (c <= 60)
-    return { score, level, tier: 'Fair — not tone deaf', detail: 'You hear pitch changes well under a semitone, which is all music needs. Training sharpens this quickly.' };
-  if (c <= 110)
-    return { score, level, tier: 'Below average', detail: 'You can hear about a semitone, the smallest step in Western music. Retake it with headphones in a quiet room — tiredness and noise cost a lot.' };
-  return { score, level, tier: 'Possible pitch difficulty', detail: 'Changes smaller than a semitone were hard to hear. That can point to congenital amusia (true tone deafness, in roughly 1.5–4% of people) — but this is a browser test, not a diagnosis.' };
+  const band = TONE_DEAF_BANDS.findIndex((edge) => c <= edge);
+  const text = ui.td[band < 0 ? TONE_DEAF_BANDS.length : band];
+  return {
+    score: c === 1 ? ui.cent1 : fmt(ui.cents, { n: c }),
+    // log scale: 1 ¢ → 1, 300 ¢ → 0
+    level: 1 - Math.log(c) / Math.log(300),
+    tier: text.tier,
+    detail: fmt(text.detail, { c }),
+  };
 }
 
 /** Rule-of-thumb ages for the highest frequency heard. High-frequency hearing
  *  falls steadily with age (presbycusis), but noise exposure and the device
- *  matter as much — the copy says so wherever this is shown. */
+ *  matter as much — the copy says so wherever this is shown. Labels for
+ *  other languages are aligned with this list in TESTS_UI. */
 export const HEARING_AGE: { hz: number; age: string }[] = [
   { hz: 19000, age: 'under 20' },
   { hz: 18000, age: 'under 25' },
@@ -135,44 +136,48 @@ export const HEARING_AGE: { hz: number; age: string }[] = [
   { hz: 8000, age: '70 or over' },
 ];
 
-export function hearingAge(hz: number): string | null {
-  return HEARING_AGE.find((row) => hz >= row.hz)?.age ?? null;
+const hearingRow = (hz: number) => HEARING_AGE.findIndex((row) => hz >= row.hz);
+
+export function hearingAge(hz: number, locale: Locale = 'en'): string | null {
+  const i = hearingRow(hz);
+  return i < 0 ? null : TESTS_UI[locale].ha.ages[i];
 }
 
-export function hearingVerdict(hz: number): Verdict {
+export function hearingVerdict(hz: number, locale: Locale = 'en'): Verdict {
+  const ha = TESTS_UI[locale].ha;
   const h = clamp(hz, 0, 20000);
-  const age = hearingAge(h);
-  const level = h < 8000 ? 0 : (h - 8000) / 12000;
-  if (!age)
-    return { score: 'Below 8 kHz', level: 0, tier: 'Check your sound', detail: 'Almost everyone can hear 8 kHz, so this usually means the volume was too low or the speaker cannot play it. Try headphones.' };
+  const i = hearingRow(h);
+  if (i < 0) return { score: ha.belowScore, level: 0, ...ha.below };
   return {
     score: khz(h),
-    level,
-    tier: `Hearing age: ${age}`,
-    detail: `The highest tone you heard was ${khz(h)}, typical of people ${age === '70 or over' ? 'aged 70 or over' : age}. Noise exposure and your speakers affect this as much as age does.`,
+    level: (h - 8000) / 12000,
+    tier: fmt(ha.tier, { age: ha.ages[i] }),
+    detail: fmt(ha.detail, { khz: khz(h), people: ha.people[i] }),
   };
 }
 
-export function verdictFor(id: MusicTestId, score: number): Verdict {
-  if (id === 'perfect-pitch') return perfectPitchVerdict(score);
-  if (id === 'tone-deaf') return toneDeafVerdict(score);
-  return hearingVerdict(score);
+export function verdictFor(id: MusicTestId, score: number, locale: Locale = 'en'): Verdict {
+  if (id === 'perfect-pitch') return perfectPitchVerdict(score, locale);
+  if (id === 'tone-deaf') return toneDeafVerdict(score, locale);
+  return hearingVerdict(score, locale);
 }
 
+/** The test's name in a language. */
+export const testName = (id: MusicTestId, locale: Locale = 'en') => TESTS_UI[locale].names[id];
+
 /** First-person headline for a share: "I scored 9/12 on the perfect pitch test". */
-export function brag(id: MusicTestId, score: number): string {
-  const v = verdictFor(id, score);
-  if (id === 'perfect-pitch') return `I scored ${v.score} on the perfect pitch test`;
-  if (id === 'tone-deaf') return `I can hear a pitch change of ${v.score}`;
-  return score >= 8000 ? `I can hear up to ${v.score} — ${v.tier.toLowerCase()}` : 'I took the hearing age test';
+export function brag(id: MusicTestId, score: number, locale: Locale = 'en'): string {
+  const ui = TESTS_UI[locale];
+  const v = verdictFor(id, score, locale);
+  if (id === 'hearing-age' && score < 8000) return ui.brag.hearingNone;
+  return fmt(ui.brag[id], { score: v.score, tier: tierInSentence(v.tier, locale) });
 }
 
 /** Third-person version for the landing page a share opens on. */
-export function friendLine(id: MusicTestId, score: number): string {
-  const v = verdictFor(id, score);
-  if (id === 'perfect-pitch') return `Your friend scored ${v.score} on the perfect pitch test`;
-  if (id === 'tone-deaf') return `Your friend can hear a pitch change of ${v.score}`;
-  return score >= 8000 ? `Your friend can hear up to ${v.score}` : 'Your friend took the hearing age test';
+export function friendLine(id: MusicTestId, score: number, locale: Locale = 'en'): string {
+  const ui = TESTS_UI[locale];
+  if (id === 'hearing-age' && score < 8000) return ui.friend.hearingNone;
+  return fmt(ui.friend[id], { score: verdictFor(id, score, locale).score });
 }
 
 /** +1 when `mine` beats `theirs`, -1 when it loses, 0 for a tie. */
@@ -201,17 +206,60 @@ export function parseScore(id: MusicTestId, raw: string | string[] | null | unde
   return clamp(n, min, max);
 }
 
+/** The language a share link was made in (`l=`), English when absent. */
+export function parseLocale(raw: string | string[] | null | undefined): Locale {
+  const l = Array.isArray(raw) ? raw[0] : raw;
+  return (LOCALES as string[]).includes(l ?? '') ? (l as Locale) : 'en';
+}
+
 export function parseShareParams(get: (key: string) => string | string[] | null | undefined) {
   const raw = get('t');
   const id = Array.isArray(raw) ? raw[0] : raw;
   if (!isMusicTestId(id)) return null;
   const score = parseScore(id, get('s'));
-  return score === null ? null : { id, score };
+  return score === null ? null : { id, score, locale: parseLocale(get('l')) };
 }
 
-export const shareQuery = (id: MusicTestId, score: number) => `t=${id}&s=${score}`;
-export const sharePath = (id: MusicTestId, score: number) => `/share/test?${shareQuery(id, score)}`;
-export const challengePath = (id: MusicTestId, score: number) => `${MUSIC_TESTS[id].href}?vs=${score}`;
+/** Each test's page — and the hub's — in every language. The translated
+ *  tools registry (lib/i18n/pages) reads these, so links from inside the
+ *  tests and the routes themselves cannot disagree. */
+export const TEST_PATHS: Record<MusicTestId | 'hub', Record<Locale, string>> = {
+  'perfect-pitch': {
+    en: '/perfect-pitch-test',
+    es: '/es/test-de-oido-absoluto',
+    pt: '/pt/teste-de-ouvido-absoluto',
+    fr: '/fr/test-oreille-absolue',
+    de: '/de/absolutes-gehoer-test',
+  },
+  'tone-deaf': {
+    en: '/tone-deaf-test',
+    es: '/es/test-de-oido-musical',
+    pt: '/pt/teste-de-ouvido-musical',
+    fr: '/fr/test-oreille-musicale',
+    de: '/de/tontaub-test',
+  },
+  'hearing-age': {
+    en: '/hearing-age-test',
+    es: '/es/test-de-edad-auditiva',
+    pt: '/pt/teste-de-idade-auditiva',
+    fr: '/fr/test-age-auditif',
+    de: '/de/hoeralter-test',
+  },
+  hub: {
+    en: '/music-tests',
+    es: '/es/tests-musicales',
+    pt: '/pt/testes-musicais',
+    fr: '/fr/tests-musicaux',
+    de: '/de/musiktests',
+  },
+};
+
+export const shareQuery = (id: MusicTestId, score: number, locale: Locale = 'en') =>
+  `t=${id}&s=${score}${locale === 'en' ? '' : `&l=${locale}`}`;
+export const sharePath = (id: MusicTestId, score: number, locale: Locale = 'en') =>
+  `/share/test?${shareQuery(id, score, locale)}`;
+export const challengePath = (id: MusicTestId, score: number, locale: Locale = 'en') =>
+  `${TEST_PATHS[id][locale]}?vs=${score}`;
 
 // ── Saved results ───────────────────────────────────────────────────────────
 
@@ -296,10 +344,6 @@ export function saveResult(id: MusicTestId, score: number, today: string): { rec
 }
 
 // ── Test logic (pure, so it can be checked outside a browser) ───────────────
-
-export const NOTE_NAMES = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
-/** Both spellings on the black keys, for answer buttons. */
-export const NOTE_BUTTON_LABELS = ['C', 'C♯/D♭', 'D', 'D♯/E♭', 'E', 'F', 'F♯/G♭', 'G', 'G♯/A♭', 'A', 'A♯/B♭', 'B'];
 
 /** Twelve notes between C3 and B5, never the same pitch class twice in a
  *  row and never in the same octave as the last one, so the previous note

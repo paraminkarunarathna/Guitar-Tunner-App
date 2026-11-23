@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { languageAlternates } from "@/lib/i18n/pages";
 import Link from "next/link";
 import ToolPageLayout from "@/components/ToolPageLayout";
 import { TestHub } from "@/components/MusicTests/TestHub";
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
   title: "Online Music Tests — Test Your Musical Ear",
   description:
     "Free online music tests: find out if you have perfect pitch, check whether you are tone deaf, and test your hearing age. Then challenge your friends.",
-  alternates: { canonical: "/music-tests" },
+  alternates: { canonical: "/music-tests", languages: languageAlternates("/music-tests") },
   openGraph: {
     title: "Music Tests — How Good Are Your Ears?",
     description: "Perfect pitch, tone deafness and hearing age — three free two-minute tests with a score to share.",

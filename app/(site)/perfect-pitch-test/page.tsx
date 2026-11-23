@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { languageAlternates } from "@/lib/i18n/pages";
 import Link from "next/link";
 import ToolPageLayout from "@/components/ToolPageLayout";
 import { PerfectPitchTest } from "@/components/MusicTests/PerfectPitchTest";
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   title: "Perfect Pitch Test — Can You Name the Note?",
   description:
     "Free perfect pitch test: hear 12 notes with no reference and name each one. Find out if you have absolute pitch in two minutes, then challenge a friend.",
-  alternates: { canonical: "/perfect-pitch-test" },
+  alternates: { canonical: "/perfect-pitch-test", languages: languageAlternates("/perfect-pitch-test") },
   openGraph: {
     title: "Perfect Pitch Test — Do You Have Perfect Pitch?",
     description: "Twelve notes, no reference tone. Name each one, get your score, and dare your friends to beat it.",

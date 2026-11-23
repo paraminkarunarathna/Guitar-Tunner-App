@@ -2,7 +2,10 @@
  *  one drawn from a shared result's numbers. */
 
 import { NoteChips, OG_COLORS as C, renderOgCard } from "@/lib/og/card";
-import { MUSIC_TESTS, brag, verdictFor, type MusicTestId } from "@/lib/musicTests";
+import { MUSIC_TESTS, brag, hearingAge, testName, verdictFor, type MusicTestId } from "@/lib/musicTests";
+import type { Locale } from "@/lib/i18n/tuner";
+import { TESTS_UI } from "@/lib/i18n/tools/testsUi";
+import { fmt } from "@/lib/i18n/tools/ui";
 
 /** A big score over a short label and a level bar. */
 function ScoreVisual({ score, label, level }: { score: string; label: string; level: number }) {
@@ -71,21 +74,21 @@ export function musicTestsHubOgImage() {
   });
 }
 
-/** Card for a shared result: /share/test/image?t=tone-deaf&s=8 */
-export function testResultOgImage(id: MusicTestId, score: number) {
-  const v = verdictFor(id, score);
-  // The hearing brag already names the age, which the visual repeats.
+/** Card for a shared result: /share/test/image?t=tone-deaf&s=8&l=fr */
+export function testResultOgImage(id: MusicTestId, score: number, locale: Locale = "en") {
+  const ui = TESTS_UI[locale];
+  const v = verdictFor(id, score, locale);
+  const age = id === "hearing-age" ? hearingAge(score, locale) : null;
+  // The hearing brag names the age, which the visual already shows.
   const title =
     id === "hearing-age"
-      ? score >= 8000 ? `I can hear up to ${v.score}. Can you?` : "How high can you hear?"
-      : id === "tone-deaf"
-        ? `${brag(id, score)}. Can you?`
-        : `${brag(id, score)}. Can you beat it?`;
+      ? score >= 8000 ? fmt(ui.hearingCardTitle, { score: v.score }) : ui.questions["hearing-age"]
+      : `${brag(id, score, locale)}. ${id === "tone-deaf" ? ui.canYou : ui.canYouBeatIt}`;
   return renderOgCard({
-    eyebrow: MUSIC_TESTS[id].name,
+    eyebrow: testName(id, locale),
     title,
-    subtitle: id === "hearing-age" ? "Free two-minute test, 8 to 20 kHz" : v.tier,
-    visual: <ScoreVisual score={v.score} label={v.tier.replace(/^Hearing age: /, "Ears ")} level={v.level} />,
-    footnote: "Take the free test · No sign-up",
+    subtitle: id === "hearing-age" ? ui.hearingCardSub : v.tier,
+    visual: <ScoreVisual score={v.score} label={age ? fmt(ui.ha.cardLabel, { age }) : v.tier} level={v.level} />,
+    footnote: ui.cardFootnote,
   });
 }

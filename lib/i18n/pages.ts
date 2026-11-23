@@ -6,6 +6,7 @@
 import { TUNER_PAGES } from "@/lib/tunerPages";
 import { INSTRUMENT_PAGES } from "@/lib/instrumentPages";
 import type { Locale } from "@/lib/i18n/tuner";
+import { TEST_PATHS } from "@/lib/musicTests";
 
 export type TranslatedLocale = Exclude<Locale, "en">;
 
@@ -239,6 +240,8 @@ export const TRANSLATED_TOOLS: TranslatedPage[] = [
     fr: "/fr/createur-de-setlist",
     de: "/de/setlist-erstellen",
   },
+  // The music tests and their hub; paths live with the tests.
+  ...(["perfect-pitch", "tone-deaf", "hearing-age", "hub"] as const).map((id) => TEST_PATHS[id]),
 ];
 
 /** Spanish pages written by hand as their own routes under app/es, before

@@ -6,6 +6,12 @@ import { PitchPipe } from "@/components/PitchPipe/PitchPipe";
 import { TuningFork } from "@/components/TuningFork/TuningFork";
 import { ChordQuiz } from "@/components/ChordQuiz/ChordQuiz";
 import { SetlistBuilder } from "@/components/Setlist/SetlistBuilder";
+import { PerfectPitchTest } from "@/components/MusicTests/PerfectPitchTest";
+import { ToneDeafTest } from "@/components/MusicTests/ToneDeafTest";
+import { HearingAgeTest } from "@/components/MusicTests/HearingAgeTest";
+import { TestHub } from "@/components/MusicTests/TestHub";
+import { TESTS_UI } from "@/lib/i18n/tools/testsUi";
+import { HEARING_AGE, PERFECT_PITCH_ROUNDS, TEST_PATHS, TONE_DEAF_BANDS, perfectPitchVerdict, toneDeafVerdict } from "@/lib/musicTests";
 import {
   TRANSLATED_LOCALES,
   TRANSLATED_TOOLS,
@@ -86,6 +92,57 @@ function ToolTable({ enPath, heads, locale }: { enPath: string; heads: string[];
       </table>
     );
   }
+  if (enPath === TEST_PATHS["perfect-pitch"].en) {
+    const bands = [[11, 12], [8, 10], [5, 7], [3, 4], [0, 2]];
+    return (
+      <table>
+        {head}
+        <tbody>
+          {bands.map(([from, to]) => (
+            <tr key={from}>
+              <td>
+                {from}–{to} / {PERFECT_PITCH_ROUNDS}
+              </td>
+              <td>{perfectPitchVerdict(from, locale).tier}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  }
+  if (enPath === TEST_PATHS["tone-deaf"].en) {
+    const edges = [...TONE_DEAF_BANDS, 300];
+    return (
+      <table>
+        {head}
+        <tbody>
+          {edges.map((to, i) => (
+            <tr key={to}>
+              <td>
+                {i === 0 ? 1 : edges[i - 1] + 1}–{to} ¢
+              </td>
+              <td>{toneDeafVerdict(to, locale).tier}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  }
+  if (enPath === TEST_PATHS["hearing-age"].en) {
+    return (
+      <table>
+        {head}
+        <tbody>
+          {HEARING_AGE.map((row, i) => (
+            <tr key={row.hz}>
+              <td>{row.hz / 1000} kHz</td>
+              <td>{TESTS_UI[locale].ha.ages[i]}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  }
   if (enPath === "/pitch-pipe") {
     return (
       <table>
@@ -148,6 +205,14 @@ function toolFor(enPath: string, locale: TranslatedLocale) {
       return <TuningFork locale={locale} />;
     case "/chord-quiz":
       return <ChordQuiz locale={locale} />;
+    case TEST_PATHS["perfect-pitch"].en:
+      return <PerfectPitchTest locale={locale} />;
+    case TEST_PATHS["tone-deaf"].en:
+      return <ToneDeafTest locale={locale} />;
+    case TEST_PATHS["hearing-age"].en:
+      return <HearingAgeTest locale={locale} />;
+    case TEST_PATHS.hub.en:
+      return <TestHub locale={locale} />;
     default:
       return <SetlistBuilder locale={locale} />;
   }
@@ -167,7 +232,7 @@ export default function LocalizedToolPage({ locale, enPath }: { locale: Translat
     name: `${copy.title} - GuitarTunePro`,
     url: `${SITE_URL}${path}`,
     inLanguage: locale,
-    applicationCategory: "MultimediaApplication",
+    applicationCategory: Object.values(TEST_PATHS).some((p) => p.en === enPath) ? "EducationalApplication" : "MultimediaApplication",
     operatingSystem: "Any",
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
     description: copy.metaDescription,

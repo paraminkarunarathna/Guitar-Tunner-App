@@ -1120,9 +1120,47 @@ people want to share and a link that dares a friend to beat it.
 
 ### Not done
 
-- English only. The tests are the strongest candidates for es/pt/fr/de next
-  ("test de oído absoluto", "teste de ouvido absoluto", "test oreille
-  absolue", "absolutes Gehör Test").
+- ~~English only~~ — translated in Step 30.
 - Hearing results depend on uncalibrated speakers; the copy says so and the
   page is not a medical test.
-- After deploy: `npm run indexnow -- /perfect-pitch-test /tone-deaf-test /hearing-age-test /music-tests /`.
+- IndexNow submitted for the four English pages and the homepage (accepted, 2026-11-23).
+
+## Step 30 — Music tests in Spanish, Portuguese, French and German  ✅ DONE (2026-11-23)
+
+16 new pages (3 tests + hub × 4 languages), registered in `TRANSLATED_TOOLS`
+from `TEST_PATHS` in `lib/musicTests.ts` — the one place the paths live, so
+the routes, hreflang, sitemap alternates, menus and in-test links agree.
+
+| | es | pt | fr | de |
+|---|---|---|---|---|
+| Perfect pitch | /es/test-de-oido-absoluto | /pt/teste-de-ouvido-absoluto | /fr/test-oreille-absolue | /de/absolutes-gehoer-test |
+| Tone deaf | /es/test-de-oido-musical | /pt/teste-de-ouvido-musical | /fr/test-oreille-musicale | /de/tontaub-test |
+| Hearing age | /es/test-de-edad-auditiva | /pt/teste-de-idade-auditiva | /fr/test-age-auditif | /de/hoeralter-test |
+| Hub | /es/tests-musicales | /pt/testes-musicais | /fr/tests-musicaux | /de/musiktests |
+
+- **Interface, verdicts and share text** in `lib/i18n/tools/testsUi.ts`
+  (English included, so every surface reads one source). Verdict functions
+  take a locale; bands stay in `lib/musicTests.ts`, so a translated result
+  can never grade differently from the English one.
+- **Note names:** solfège answer buttons in es/pt/fr (Do♯/Re♭ …); German
+  uses Cis/Des … Ais/B and H, via `testNoteNames`.
+- **German tiers keep their capitals** when used mid-sentence
+  (`tierInSentence`); other languages lower-case them.
+- **Shares stay in the sharer's language:** `&l=<locale>` on
+  `/share/test` and `/share/test/image` — landing page (`lang` set), card,
+  og:title and the "take the test" link all follow it. Challenge links
+  point at the same-language test page.
+- **Page copy** per language in `lib/i18n/tools/tests-<lang>.ts`, merged into
+  `TOOL_COPY`; score tables on translated pages are drawn from the same
+  verdict functions. English test pages now emit hreflang.
+- Verified: `tsc`, build, `audit:seo` (384 pages, 0 issues), `audit:links`
+  (0 orphans, depth ≤ 2), Playwright at 390 px: German run with challenge
+  and German note names, French trial UI, Spanish hearing run → Spanish
+  share text → Spanish landing page, Portuguese hub, hreflang on English,
+  localized tables, English suite re-run unchanged, no console errors.
+
+### Not done
+
+- Native-speaker review of the copy is advised, as for Step 27.
+- Achievements and `/my-progress` remain English-only pages.
+- After deploy: `npm run indexnow -- --since 2026-11-23`.
